@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "97498975716",
+    "project_id": "quit-smoking-9ab4b",
+    "storage_bucket": "quit-smoking-9ab4b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:97498975716:android:540351e55e4da65ff74bf1",
+        "android_client_info": {
+          "package_name": "com.example.quitesmoking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwgSUMKSQgrKrRXYXJKyS3WzVU93xuq0o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
