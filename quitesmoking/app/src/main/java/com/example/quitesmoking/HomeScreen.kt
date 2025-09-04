@@ -205,38 +205,40 @@ fun HomeScreen(navController: NavController) {
                     }
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    DynamicCheckInButton(navController)
-                    DashboardIconButton(Icons.Default.Whatshot, "Urge Tab") {
-                        navController.navigate(Routes.URGE)
-                    }
-                    DashboardIconButton(Icons.Default.BarChart, "MileStone") {
-                        navController.navigate(Routes.PROGRESS)
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    DynamicCheckInButton(navController)
-                    DashboardIconButton(Icons.Default.SmartToy, "CHAT") {
-                        navController.navigate(Routes.GPT_CHAT)
-                    }
-
-//                    DashboardIconButton(Icons.Default.PeopleAlt, "Community") {
-//                        navController.navigate(Routes.COMMUNITY)
+/*Commented out the grid columns to navigate*/
+//            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    DynamicCheckInButton(navController)
+//                    DashboardIconButton(Icons.Default.Whatshot, "Urge Tab") {
+//                        navController.navigate(Routes.URGE)
 //                    }
-                    DashboardIconButton(Icons.Default.Flag, "Weekly") {
-                        navController.navigate(Routes.WEEKLY_GOAL_EDIT)
-                    }
-                }
-            }
+//                    DashboardIconButton(Icons.Default.BarChart, "MileStone") {
+//                        navController.navigate(Routes.PROGRESS)
+//                    }
+//                }
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    DynamicCheckInButton(navController)
+//                    DashboardIconButton(Icons.Default.SmartToy, "CHAT") {
+//                        navController.navigate(Routes.GPT_CHAT)
+//                    }
+//
+////                    DashboardIconButton(Icons.Default.PeopleAlt, "Community") {
+////                        navController.navigate(Routes.COMMUNITY)
+////                    }
+//                    DashboardIconButton(Icons.Default.Flag, "Weekly") {
+//                        navController.navigate(Routes.WEEKLY_GOAL_EDIT)
+//                    }
+//                }
+//            }
 
             Card(
                 modifier = Modifier.fillMaxWidth(),

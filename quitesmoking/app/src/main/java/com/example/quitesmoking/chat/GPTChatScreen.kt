@@ -1,4 +1,4 @@
-/* package com.example.quitesmoking.chat
+package com.example.quitesmoking.chat
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -15,8 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-//import androidx.compose.material.icons.filled.ArrowBack
-//import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
-// import retrofit2.http.Headers
+ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 fun isNetworkAvailable(context: Context): Boolean {
@@ -52,7 +52,7 @@ data class ChatResponse(val choices: List<ChatChoice>)
 interface OpenAIService {
     @Headers(
         "Content-Type: application/json",
-        "Authorization: Bearer" // OPENAI_API_KEY
+        "Authorization: Bearer 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" // OPENAI_API_KEY
     )
     @POST("v1/chat/completions")
     suspend fun getChatCompletion(@Body request: ChatRequest): retrofit2.Response<ChatResponse>
@@ -95,7 +95,7 @@ fun GPTChatScreen(navController: NavController) {
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                /*TextField(
+                TextField(
                     value = inputText,
                     onValueChange = { inputText = it },
                     placeholder = { Text("Type your message...") },
@@ -108,7 +108,7 @@ fun GPTChatScreen(navController: NavController) {
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent
                     )
-                )*/
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(
                     onClick = {
@@ -202,7 +202,7 @@ fun GPTChatScreen(navController: NavController) {
             }
         }
     }
-} */
+}
 
 
 //package com.example.quitesmoking.chat
@@ -259,7 +259,7 @@ fun GPTChatScreen(navController: NavController) {
 //interface OpenAIService {
 //    @Headers(
 //        "Content-Type: application/json",
-//        "Authorization: Bearer YOUR_OPENAI_API_KEY" // ← 替换为你的 OpenAI API Key
+//        "Authorization: Bearer YOUR_OPENAI_API_KEY"
 //    )
 //    @POST("v1/chat/completions")
 //    suspend fun getChatCompletion(@Body request: ChatRequest): retrofit2.Response<ChatResponse>
