@@ -3,6 +3,12 @@ package com.example.quitesmoking
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
 import androidx.navigation.compose.*
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -26,6 +32,7 @@ import com.example.quitesmoking.urge.WithdrawalReliefTipsScreen
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,26 +45,40 @@ class MainActivity : ComponentActivity() {
                 NavHost(
                     navController = navController,
                     startDestination = if (FirebaseAuth.getInstance().currentUser != null)
-                        Routes.HOME else Routes.LOGIN
+                         "main" else Routes.LOGIN
                 ) {
-                    /* ---------- core & auth ---------- */
-                    composable(Routes.HOME)     { HomeScreen(navController) }
+
+                    composable("main") { MainScreen(navController) }
+//                    /* ---------- core & auth ---------- */
+//                    composable(Routes.HOME)     { HomeScreen(navController) }
+//                    composable(Routes.LOGIN)    { LoginScreen(navController) }
+//                    composable(Routes.REGISTER) { RegisterScreen(navController) }
+//
+//                    /* ---------- original routes ---------- */
+//                    composable(Routes.CHAT)     { ChatScreen(navController) }
+//                    composable(Routes.URGE)     { UrgeTabScreen(navController) }
+//                    composable(Routes.PROGRESS) { StatsScreen(navController) }
+//                    composable(Routes.GPT_CHAT) { GPTChatScreen(navController) }
+//                    composable(Routes.COMMUNITY)     { CommunityScreen(navController) }
+//                    composable(Routes.LEAD) { LeaderboardScreen() }
+//
+//                    /* ---------- NEW morning / night / weekly ---------- */
+//                    composable(Routes.MORNING_CHECK)    { MorningCheckInScreen(navController) }
+//                    composable(Routes.NIGHT_CHECK)      { NightCheckInScreen(navController) }
+//                    composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(navController) }
+
+
+
+                    // auth
                     composable(Routes.LOGIN)    { LoginScreen(navController) }
                     composable(Routes.REGISTER) { RegisterScreen(navController) }
 
-                    /* ---------- original routes ---------- */
-                    composable(Routes.CHAT)     { ChatScreen(navController) }
-                    composable(Routes.URGE)     { UrgeTabScreen(navController) }
-                    composable(Routes.PROGRESS) { StatsScreen(navController) }
-                    composable(Routes.GPT_CHAT) { GPTChatScreen(navController) }
+                    // other non-bottom routes
                     composable(Routes.COMMUNITY)     { CommunityScreen(navController) }
-                    composable(Routes.LEAD) { LeaderboardScreen() }
-
-                    /* ---------- NEW morning / night / weekly ---------- */
-                    composable(Routes.MORNING_CHECK)    { MorningCheckInScreen(navController) }
-                    composable(Routes.NIGHT_CHECK)      { NightCheckInScreen(navController) }
-                    composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(navController) }
-
+                    composable(Routes.LEAD)          { LeaderboardScreen() }
+                    composable(Routes.MORNING_CHECK) { MorningCheckInScreen(navController) }
+                    composable(Routes.NIGHT_CHECK)   { NightCheckInScreen(navController) }
+                    composable("craving_tips")       { CravingTipsScreen(navController) }
                     /* ---------- craving tips ---------- */
                     composable("craving_tips") {
                         CravingTipsScreen(navController)
@@ -81,7 +102,30 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
+/**
+ * Bottom nav scaffold with nested NavHost
+ */
+@Composable
+fun MainScreen(rootNavController: NavController) {
+    /*Use two different navigation Contollers*/
+    val bottomNavController = rememberNavController()
+    Scaffold(
+        bottomBar = { BottomBar(bottomNavController) }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            NavHost(
+                navController = bottomNavController,
+                startDestination = Routes.HOME
+            ) {
+                composable(Routes.HOME)     { HomeScreen(rootNavController) }
+                composable(Routes.URGE)     { UrgeTabScreen(rootNavController) }
+                composable(Routes.PROGRESS) { StatsScreen(rootNavController) }
+                composable(Routes.GPT_CHAT) { GPTChatScreen(rootNavController) }
+                composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(rootNavController) }
+            }
+        }
+    }
+}
 //package com.example.quitesmoking
 //
 //import android.os.Bundle

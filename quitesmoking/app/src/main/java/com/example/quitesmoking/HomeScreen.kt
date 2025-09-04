@@ -206,38 +206,24 @@ fun HomeScreen(navController: NavController) {
             }
 
             // Dashboard navigation icons
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    DynamicCheckInButton(navController)
-                    DashboardIconButton(Icons.Default.Whatshot, "Urge Tab") {
-                        navController.navigate(Routes.URGE)
-                    }
-                    DashboardIconButton(Icons.Default.BarChart, "MileStone") {
-                        navController.navigate(Routes.PROGRESS)
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    DynamicCheckInButton(navController)
-                    DashboardIconButton(Icons.Default.SmartToy, "CHAT") {
-                        navController.navigate(Routes.GPT_CHAT)
-                    }
-
-//                    DashboardIconButton(Icons.Default.PeopleAlt, "Community") {
-//                        navController.navigate(Routes.COMMUNITY)
-//                    }
-                    DashboardIconButton(Icons.Default.Flag, "Weekly") {
-                        navController.navigate(Routes.WEEKLY_GOAL_EDIT)
-                    }
-                }
-            }
+//            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    DynamicCheckInButton(navController)
+//
+//                }
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    DynamicCheckInButton(navController)
+//
+//                }
+//            }
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -272,29 +258,6 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
-@Composable
-fun DashboardIconButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .width(100.dp)
-            .height(90.dp),
-        shape = RoundedCornerShape(12.dp),
-        onClick = onClick,
-        elevation = CardDefaults.cardElevation(2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(imageVector = icon, contentDescription = label)
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(text = label, fontSize = 12.sp)
-        }
-    }
-}
 
 
 
