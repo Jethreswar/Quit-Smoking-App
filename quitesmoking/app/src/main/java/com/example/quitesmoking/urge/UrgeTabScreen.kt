@@ -49,13 +49,10 @@ fun UrgeTabScreen(navController: NavController) {
                 navController.navigate("craving_tips")
             }
 
-            // ✅ Pass encoded video URL
+            // ✅ Use local mindfulness video resource
             CravingOptionButton("Mindfulness Videos") {
-//                val videoUrl = "android.resource://${context.packageName}/raw/sample"
-//                navController.navigate("mindfulness_video_screen/${Uri.encode(videoUrl)}")
-                val videoUrl = "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4"
-                val encodedUrl = Uri.encode(videoUrl)
-                navController.navigate("mindfulness_video_screen/$encodedUrl")
+                val videoUrl = "local_sample" // Special identifier for local video
+                navController.navigate("mindfulness_video_screen/$videoUrl")
             }
 
             CravingOptionButton("Reach Out to Someone") {
@@ -64,7 +61,7 @@ fun UrgeTabScreen(navController: NavController) {
             }
 
             CravingOptionButton("Withdrawal Relief Tips") {
-                // TODO: Implement in the future
+                navController.navigate("withdrawal_relief_tips")
             }
         }
     }

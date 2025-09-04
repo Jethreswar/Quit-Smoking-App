@@ -10,8 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.Alignment
+import androidx.navigation.NavController
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
@@ -20,6 +21,8 @@ import androidx.media3.ui.PlayerView
 @Composable
 fun MindfulnessVideoPlayerScreen(navController: NavController, videoUrl: String) {
     val context = LocalContext.current
+    var videoLoadError by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
 
     // ✅ Auto fallback to local resource if requested
     val actualUri = if (videoUrl == "local_sample") {
@@ -33,6 +36,26 @@ fun MindfulnessVideoPlayerScreen(navController: NavController, videoUrl: String)
             setMediaItem(MediaItem.fromUri(actualUri))
             prepare()
             playWhenReady = true
+            
+            // Add error listener
+            addListener(object : androidx.media3.common.Player.Listener {
+                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                    println("MindfulnessVideoPlayer: Playback error: ${error.message}")
+                    videoLoadError = true
+                    isLoading = false
+                }
+                
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    when (playbackState) {
+                        androidx.media3.common.Player.STATE_READY -> {
+                            isLoading = false
+                        }
+                        androidx.media3.common.Player.STATE_BUFFERING -> {
+                            isLoading = true
+                        }
+                    }
+                }
+            })
         }
     }
 
@@ -67,21 +90,66 @@ fun MindfulnessVideoPlayerScreen(navController: NavController, videoUrl: String)
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            AndroidView(
-                factory = {
-                    PlayerView(context).apply {
-                        player = exoPlayer
-                        useController = true
-                        layoutParams = android.view.ViewGroup.LayoutParams(
-                            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-                        )
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16 / 9f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16 / 9f)
-            )
+                }
+                videoLoadError -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16 / 9f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                "Failed to load video",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                "Please check your connection or try again later.",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Button(
+                                onClick = {
+                                    videoLoadError = false
+                                    isLoading = true
+                                    exoPlayer.prepare()
+                                }
+                            ) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    AndroidView(
+                        factory = {
+                            PlayerView(context).apply {
+                                player = exoPlayer
+                                useController = true
+                                layoutParams = android.view.ViewGroup.LayoutParams(
+                                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16 / 9f)
+                    )
+                }
+            }
         }
     }
 }

@@ -55,7 +55,7 @@ fun MorningCheckInScreen(nav: NavController) {
     var whatMatters by remember { mutableStateOf("") }
     var note       by remember { mutableStateOf("") }
 
-    Scaffold(
+     Scaffold(
         snackbarHost = { SnackbarHost(snack) },
         topBar = { CenterAlignedTopAppBar(title = { Text("Good morning!") }) },
         floatingActionButton = {

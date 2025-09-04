@@ -1,4 +1,3 @@
-
 package com.example.quitesmoking
 
 import android.annotation.SuppressLint
@@ -206,67 +205,67 @@ fun HomeScreen(navController: NavController) {
                 )
             }
 
-/*Commented out the grid columns to navigate*/
-//            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-//
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.SpaceBetween
-//                ) {
-//                    DynamicCheckInButton(navController)
-//                    DashboardIconButton(Icons.Default.Whatshot, "Urge Tab") {
-//                        navController.navigate(Routes.URGE)
-//                    }
-//                    DashboardIconButton(Icons.Default.BarChart, "MileStone") {
-//                        navController.navigate(Routes.PROGRESS)
-//                    }
-//                }
-//
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = Arrangement.SpaceBetween
-//                ) {
-//                    DynamicCheckInButton(navController)
-//                    DashboardIconButton(Icons.Default.SmartToy, "CHAT") {
-//                        navController.navigate(Routes.GPT_CHAT)
-//                    }
-//
-////                    DashboardIconButton(Icons.Default.PeopleAlt, "Community") {
-////                        navController.navigate(Routes.COMMUNITY)
-////                    }
-//                    DashboardIconButton(Icons.Default.Flag, "Weekly") {
-//                        navController.navigate(Routes.WEEKLY_GOAL_EDIT)
-//                    }
-//                }
-//            }
+            // Dashboard navigation icons
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F5)),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Daily Motivation", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "\"Every time you resist a craving, you're one step closer to freedom.\"",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        "- Your Future Self",
-                        modifier = Modifier.fillMaxWidth(),
-                        color = Color(0xFF3F51B5),
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center
-                    )
+                    DynamicCheckInButton(navController)
+                    DashboardIconButton(Icons.Default.Whatshot, "Urge Tab") {
+                        navController.navigate(Routes.URGE)
+                    }
+                    DashboardIconButton(Icons.Default.BarChart, "MileStone") {
+                        navController.navigate(Routes.PROGRESS)
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    DynamicCheckInButton(navController)
+                    DashboardIconButton(Icons.Default.SmartToy, "CHAT") {
+                        navController.navigate(Routes.GPT_CHAT)
+                    }
+
+//                    DashboardIconButton(Icons.Default.PeopleAlt, "Community") {
+//                        navController.navigate(Routes.COMMUNITY)
+//                    }
+                    DashboardIconButton(Icons.Default.Flag, "Weekly") {
+                        navController.navigate(Routes.WEEKLY_GOAL_EDIT)
+                    }
                 }
             }
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F5)),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Daily Motivation", style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "\"Every time you resist a craving, you're one step closer to freedom.\"",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            "- Your Future Self",
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color(0xFF3F51B5),
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
 
             RecommendedGamesSection()
         }
