@@ -76,7 +76,16 @@ fun GPTChatScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val listState = rememberLazyListState()
-
+    LaunchedEffect(Unit) {
+        if (messages.isEmpty()) {
+            messages.add(
+                GPTMessage(
+                    "assistant",
+                    "👋 Welcome to Quit GPT! I'm here to support you on your journey. Type your message below to get started."
+                )
+            )
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
