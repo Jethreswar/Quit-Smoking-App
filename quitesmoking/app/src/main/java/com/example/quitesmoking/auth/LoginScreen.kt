@@ -29,7 +29,9 @@ fun LoginScreen(navController: NavController) {
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         Toast.makeText(context, "Success！", Toast.LENGTH_SHORT).show()
-                        navController.navigate(Routes.CHAT)
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
                     } else {
                         Toast.makeText(context, "Fail: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                     }

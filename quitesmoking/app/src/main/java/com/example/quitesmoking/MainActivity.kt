@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.navigation.compose.*
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.example.quitesmoking.auth.LoginScreen
 import com.example.quitesmoking.auth.RegisterScreen
 import com.example.quitesmoking.chat.ChatScreen
@@ -15,8 +17,12 @@ import com.example.quitesmoking.ui.MorningCheckInScreen
 import com.example.quitesmoking.ui.NightCheckInScreen
 import com.example.quitesmoking.ui.WeeklyGoalBuilderScreen
 import com.example.quitesmoking.ui.theme.QuitesmokingTheme
+import com.example.quitesmoking.HomeScreen
+import com.example.quitesmoking.StatsScreen
 import com.example.quitesmoking.urge.CravingTipsScreen
 import com.example.quitesmoking.urge.UrgeTabScreen
+import com.example.quitesmoking.urge.MindfulnessVideoPlayerScreen
+import com.example.quitesmoking.urge.WithdrawalReliefTipsScreen
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 
@@ -55,6 +61,20 @@ class MainActivity : ComponentActivity() {
                     /* ---------- craving tips ---------- */
                     composable("craving_tips") {
                         CravingTipsScreen(navController)
+                    }
+
+                    /* ---------- mindfulness video ---------- */
+                    composable(
+                        route = "mindfulness_video_screen/{videoUrl}",
+                        arguments = listOf(navArgument("videoUrl") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val videoUrl = backStackEntry.arguments?.getString("videoUrl") ?: ""
+                        MindfulnessVideoPlayerScreen(navController = navController, videoUrl = videoUrl)
+                    }
+
+                    /* ---------- withdrawal relief tips ---------- */
+                    composable("withdrawal_relief_tips") {
+                        WithdrawalReliefTipsScreen(navController)
                     }
                 }
             }

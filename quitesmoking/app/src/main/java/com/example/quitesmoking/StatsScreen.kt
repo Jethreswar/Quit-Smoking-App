@@ -18,36 +18,163 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.Calendar
+import java.time.LocalDate
+import java.time.ZoneId
+import com.example.quitesmoking.model.MilestoneGoal
+import com.example.quitesmoking.repo.MilestoneGoalRepository
+import com.example.quitesmoking.repo.DailySmokingStatusRepository
+import com.example.quitesmoking.model.DailySmokingStatus
+import com.example.quitesmoking.ui.SmokingCalendarView
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun StatsScreen(navController: NavController) {
+    val db = FirebaseFirestore.getInstance()
+    val userId = FirebaseAuth.getInstance().currentUser?.uid
+    val scope = rememberCoroutineScope()
+    
     var smokeFreeTarget by remember { mutableIntStateOf(0) }
     var maxUsageTarget by remember { mutableIntStateOf(0) }
     var isEditing by remember { mutableStateOf(false) }
+    var selectedRange by remember { mutableStateOf("This Week") }
+    var smokeFreeDays by remember { mutableIntStateOf(0) }
+    var estimatedSavings by remember { mutableDoubleStateOf(0.0) }
+    var isLoading by remember { mutableStateOf(true) }
+    var currentGoal by remember { mutableStateOf<MilestoneGoal?>(null) }
+    var goalId by remember { mutableStateOf<String?>(null) }
+    var selectedDate by remember { mutableStateOf(Date()) }
+    var smokingStatuses by remember { mutableStateOf<List<DailySmokingStatus>>(emptyList()) }
+    var totalSmokeFreeDays by remember { mutableIntStateOf(0) }
+    var currentStreak by remember { mutableIntStateOf(0) }
+    
+    val ranges = listOf("This Week", "This Month", "All Time")
 
-    // 当前周
+    // Calculate date ranges
     val today = remember { Calendar.getInstance() }
-    val firstDay = today.clone() as Calendar
-    val lastDay = today.clone() as Calendar
-    firstDay.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
-    lastDay.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY)
+    val firstDay = remember { Calendar.getInstance() }
+    val lastDay = remember { Calendar.getInstance() }
+    
+    // Update date ranges when selectedRange changes
+    LaunchedEffect(selectedRange) {
+        firstDay.time = today.time
+        lastDay.time = today.time
+        
+        when (selectedRange) {
+            "This Week" -> {
+                firstDay.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+                lastDay.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY)
+            }
+            "This Month" -> {
+                firstDay.set(Calendar.DAY_OF_MONTH, 1)
+                lastDay.set(Calendar.DAY_OF_MONTH, lastDay.getActualMaximum(Calendar.DAY_OF_MONTH))
+            }
+            "All Time" -> {
+                firstDay.set(Calendar.YEAR, 2020) // Set to a reasonable start date
+                // lastDay remains as today
+            }
+        }
+    }
 
     val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
 
-    // 示例统计数据
-    val smokeFreeDays = 0
-    val estimatedSavings = 0.00
-    var selectedRange by remember { mutableStateOf("This Week") }
-    val ranges = listOf("This Week", "This Month", "All Time")
+    // Load current milestone goal and historical data
+    LaunchedEffect(userId) {
+        if (userId != null) {
+            try {
+                // Load current goal
+                val goal = MilestoneGoalRepository.getCurrentMilestoneGoal()
+                currentGoal = goal
+                if (goal != null) {
+                    smokeFreeTarget = goal.smokeFreeTarget
+                    maxUsageTarget = goal.maxUsageTarget
+                    selectedRange = goal.goalPeriod
+                    // We need to get the goal ID for updates - for now we'll create a new one
+                    // In a production app, you'd want to store and retrieve the actual document ID
+                }
+                
+                // Update total smoke-free days from goal if available
+                if (goal?.totalSmokeFreeDays != null && goal.totalSmokeFreeDays > 0) {
+                    totalSmokeFreeDays = goal.totalSmokeFreeDays
+                }
+                
+                // Load total smoke-free days and current streak
+                totalSmokeFreeDays = DailySmokingStatusRepository.getTotalSmokeFreeDays()
+                currentStreak = DailySmokingStatusRepository.getCurrentStreak()
+                
+            } catch (e: Exception) {
+                // Handle error silently, use default values
+            }
+        }
+    }
+
+    // Load smoking statuses for calendar view
+    LaunchedEffect(selectedDate, userId) {
+        if (userId != null) {
+            try {
+                val calendar = Calendar.getInstance().apply { time = selectedDate }
+                val year = calendar.get(Calendar.YEAR)
+                val month = calendar.get(Calendar.MONTH)
+                
+                smokingStatuses = DailySmokingStatusRepository.getSmokeFreeDaysForMonth(year, month)
+            } catch (e: Exception) {
+                smokingStatuses = emptyList()
+            }
+        }
+    }
+
+    // Load data based on selected range
+    LaunchedEffect(selectedRange, userId) {
+        if (userId != null) {
+            isLoading = true
+            try {
+                val startDate = firstDay.time
+                val endDate = lastDay.time
+                
+                val query = db.collection("users")
+                    .document(userId)
+                    .collection("dailyCheckResponses")
+                    .whereGreaterThanOrEqualTo("timestamp", startDate)
+                    .whereLessThanOrEqualTo("timestamp", endDate)
+                
+                val snapshot = query.get().await()
+                
+                val smokeFreeCount = snapshot.documents.count { doc ->
+                    val answer = doc.getString("answer")
+                    answer?.lowercase()?.contains("no") == true || answer == "否"
+                }
+                
+                smokeFreeDays = smokeFreeCount
+                
+                // Calculate estimated savings based on user's goal or actual smoke-free days
+                val daysToCalculate = if (smokeFreeTarget > 0) smokeFreeTarget else smokeFreeCount
+                
+                // Calculate cost per day based on typical smoking costs
+                // This could be made configurable by the user in the future
+                val costPerDay = 10.0 // Default: $10 per day
+                estimatedSavings = daysToCalculate * costPerDay
+                
+            } catch (e: Exception) {
+                // Handle error
+                smokeFreeDays = 0
+                estimatedSavings = 0.0
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Weekly Tracker") },
+                title = { Text("Milestone Tracker") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
@@ -60,7 +187,7 @@ fun StatsScreen(navController: NavController) {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()) // 添加滑动
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -87,22 +214,181 @@ fun StatsScreen(navController: NavController) {
                         Text("$maxUsageTarget", fontSize = 16.sp)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Progress indicator
+                    if (smokeFreeTarget > 0) {
+                        val progress = (smokeFreeDays.toFloat() / smokeFreeTarget.toFloat()).coerceIn(0f, 1f)
+                        LinearProgressIndicator(
+                            progress = progress,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp),
+                            color = Color(0xFF4CAF50),
+                            trackColor = Color(0xFFE0E0E0)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Progress: $smokeFreeDays / $smokeFreeTarget days (${(progress * 100).toInt()}%)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    
                     Button(onClick = { isEditing = true }) {
-                        Text("Edit")
+                        Text("Edit Goals")
+                    }
+                }
+            }
+
+            // Overall Progress Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Overall Progress", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = totalSmokeFreeDays.toString(),
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4CAF50)
+                            )
+                            Text(
+                                text = "Total Smoke-free Days",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        }
+                        
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = currentStreak.toString(),
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF9800)
+                            )
+                            Text(
+                                text = "Current Streak",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
             }
 
             // Calendar View
-            Text("Calendar View", style = MaterialTheme.typography.titleSmall)
-            AndroidView(factory = { context ->
-                CalendarView(context).apply {
-                    minDate = firstDay.timeInMillis
-                    maxDate = lastDay.timeInMillis
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "📅 Calendar View", 
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        // Quick stats for the current month
+                        val currentMonthStatuses = smokingStatuses.filter { status ->
+                            val statusCal = Calendar.getInstance().apply { time = status.date }
+                            val currentCal = Calendar.getInstance().apply { time = selectedDate }
+                            statusCal.get(Calendar.YEAR) == currentCal.get(Calendar.YEAR) &&
+                            statusCal.get(Calendar.MONTH) == currentCal.get(Calendar.MONTH)
+                        }
+                        
+                        val smokeFreeCount = currentMonthStatuses.count { it.isSmokeFree }
+                        val totalDays = currentMonthStatuses.size
+                        
+                        if (totalDays > 0) {
+                            Text(
+                                text = "$smokeFreeCount/$totalDays smoke-free",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    SmokingCalendarView(
+                        selectedDate = selectedDate,
+                        onDateSelected = { date ->
+                            selectedDate = date
+                        },
+                        smokingStatuses = smokingStatuses,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(420.dp) // Increased height for better visibility
+                    )
                 }
-            }, modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp))
+            }
+            
+            // Selected Date Details
+            val selectedDateStatus = smokingStatuses.find { status ->
+                val statusCal = Calendar.getInstance().apply { time = status.date }
+                val selectedCal = Calendar.getInstance().apply { time = selectedDate }
+                statusCal.get(Calendar.YEAR) == selectedCal.get(Calendar.YEAR) &&
+                statusCal.get(Calendar.MONTH) == selectedCal.get(Calendar.MONTH) &&
+                statusCal.get(Calendar.DAY_OF_MONTH) == selectedCal.get(Calendar.DAY_OF_MONTH)
+            }
+            
+            if (selectedDateStatus != null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Details for ${SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(selectedDate)}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (selectedDateStatus.isSmokeFree) "✅ Smoke-free" else "❌ Smoked",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (selectedDateStatus.isSmokeFree) Color(0xFF4CAF50) else Color(0xFFFF5722)
+                            )
+                        }
+                        
+                        selectedDateStatus.notes?.let { notes ->
+                            if (notes.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Notes: $notes", fontSize = 14.sp)
+                            }
+                        }
+                        
+                        selectedDateStatus.mood?.let { mood ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Mood: $mood/5", fontSize = 14.sp)
+                        }
+                        
+                        if (selectedDateStatus.triggers.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Triggers: ${selectedDateStatus.triggers.joinToString(", ")}", fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
 
             // Money Saved Section
             Card(
@@ -119,7 +405,29 @@ fun StatsScreen(navController: NavController) {
                         ranges.forEach { range ->
                             FilterChip(
                                 selected = selectedRange == range,
-                                onClick = { selectedRange = range },
+                                onClick = { 
+                                    selectedRange = range
+                                    // Update goals when range changes
+                                    scope.launch {
+                                        try {
+                                            if (currentGoal != null) {
+                                                val updatedGoal = currentGoal!!.copy(
+                                                    goalPeriod = range,
+                                                    startDate = firstDay.time,
+                                                    endDate = lastDay.time
+                                                )
+                                                if (goalId != null) {
+                                                    MilestoneGoalRepository.updateMilestoneGoal(goalId!!, updatedGoal)
+                                                } else {
+                                                    MilestoneGoalRepository.activateNewGoal(updatedGoal)
+                                                }
+                                                currentGoal = updatedGoal
+                                            }
+                                        } catch (e: Exception) {
+                                            // Handle error silently
+                                        }
+                                    }
+                                },
                                 label = { Text(range) }
                             )
                         }
@@ -134,17 +442,57 @@ fun StatsScreen(navController: NavController) {
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Smoke-free days:", fontSize = 16.sp)
-                    Text(smokeFreeDays.toString(), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                    } else {
+                        Text("Smoke-free days:", fontSize = 16.sp)
+                        Text(smokeFreeDays.toString(), fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Estimated money saved:", fontSize = 16.sp)
-                    Text(
-                        text = "$${"%.2f".format(estimatedSavings)}",
-                        fontSize = 20.sp,
-                        color = Color(0xFF4CAF50),
-                        fontWeight = FontWeight.Bold
-                    )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Show goal-based savings if user has set goals
+                        if (smokeFreeTarget > 0) {
+                            val costPerDay = 10.0 // Should match the calculation above
+                            val goalSavings = smokeFreeTarget * costPerDay
+                            Text("Goal-based savings:", fontSize = 14.sp, color = Color.Gray)
+                            Text(
+                                "$${"%.2f".format(goalSavings)}",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2196F3)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        
+                        Text("Estimated money saved:", fontSize = 16.sp)
+                        Text(
+                            "$${"%.2f".format(estimatedSavings)}",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4CAF50)
+                        )
+                        
+                        // Show additional info if user has goals
+                        if (smokeFreeTarget > 0) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            val remainingDays = (smokeFreeTarget - smokeFreeDays).coerceAtLeast(0)
+                            if (remainingDays > 0) {
+                                Text(
+                                    text = "Remaining to goal: $remainingDays days",
+                                    fontSize = 14.sp,
+                                    color = Color(0xFFFF9800)
+                                )
+                            } else {
+                                Text(
+                                    text = "🎉 Goal achieved!",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF4CAF50)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -155,7 +503,40 @@ fun StatsScreen(navController: NavController) {
         AlertDialog(
             onDismissRequest = { isEditing = false },
             confirmButton = {
-                TextButton(onClick = { isEditing = false }) {
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            try {
+                                // Create new milestone goal
+                                val newGoal = MilestoneGoal(
+                                    smokeFreeTarget = smokeFreeTarget,
+                                    maxUsageTarget = maxUsageTarget,
+                                    goalPeriod = selectedRange,
+                                    startDate = firstDay.time,
+                                    endDate = lastDay.time,
+                                    createdAt = Date(),
+                                    isActive = true,
+                                    totalSmokeFreeDays = totalSmokeFreeDays,
+                                    lastUpdated = Date()
+                                )
+                                
+                                // Save to Firestore
+                                if (goalId != null) {
+                                    MilestoneGoalRepository.updateMilestoneGoal(goalId!!, newGoal)
+                                } else {
+                                    MilestoneGoalRepository.activateNewGoal(newGoal)
+                                }
+                                
+                                // Update local state
+                                currentGoal = newGoal
+                                isEditing = false
+                            } catch (e: Exception) {
+                                // Handle error - could show a snackbar here
+                                isEditing = false
+                            }
+                        }
+                    }
+                ) {
                     Text("Save")
                 }
             },
@@ -164,7 +545,7 @@ fun StatsScreen(navController: NavController) {
                     Text("Cancel")
                 }
             },
-            title = { Text("Edit Weekly Goals") },
+            title = { Text("Edit Milestone Goals") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
@@ -172,9 +553,10 @@ fun StatsScreen(navController: NavController) {
                         onValueChange = {
                             smokeFreeTarget = it.toIntOrNull() ?: 0
                         },
-                        label = { Text("Smoke-free days") },
+                        label = { Text("Smoke-free days target") },
                         singleLine = true
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = maxUsageTarget.toString(),
                         onValueChange = {
@@ -183,565 +565,19 @@ fun StatsScreen(navController: NavController) {
                         label = { Text("Max e-cig uses") },
                         singleLine = true
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Goal Period: $selectedRange",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "Period: ${dateFormat.format(firstDay.time)} - ${dateFormat.format(lastDay.time)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
                 }
             }
         )
     }
 }
-
-//@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-//package com.example.quitesmoking
-//
-//import android.widget.CalendarView
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.ArrowBack
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.text.style.TextAlign
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.unit.sp
-//import androidx.compose.ui.viewinterop.AndroidView
-//import androidx.navigation.NavController
-//import java.text.SimpleDateFormat
-//import java.util.*
-//
-//@Composable
-//fun StatsScreen(navController: NavController) {
-//    var smokeFreeTarget by remember { mutableIntStateOf(0) }
-//    var maxUsageTarget by remember { mutableIntStateOf(0) }
-//    var isEditing by remember { mutableStateOf(false) }
-//
-//    val today = remember { Calendar.getInstance() }
-//    val firstDay = today.clone() as Calendar
-//    val lastDay = today.clone() as Calendar
-//    firstDay.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
-//    lastDay.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY)
-//
-//    val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-//
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = { Text("Goal for the Week") },
-//                navigationIcon = {
-//                    IconButton(onClick = { navController.popBackStack() }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                }
-//            )
-//        }
-//    ) { innerPadding ->
-//        Column(
-//            modifier = Modifier
-//                .padding(innerPadding)
-//                .fillMaxSize()
-//                .padding(16.dp),
-//            verticalArrangement = Arrangement.spacedBy(24.dp)
-//        ) {
-//            Card(
-//                modifier = Modifier.fillMaxWidth(),
-//                shape = RoundedCornerShape(16.dp),
-//                elevation = CardDefaults.cardElevation(4.dp)
-//            ) {
-//                Column(modifier = Modifier.padding(16.dp)) {
-//                    Text("Goal for the Week", style = MaterialTheme.typography.titleMedium)
-//                    Text(
-//                        text = "${dateFormat.format(firstDay.time)} - ${dateFormat.format(lastDay.time)}",
-//                        style = MaterialTheme.typography.bodySmall,
-//                        color = Color.Gray
-//                    )
-//                    Spacer(modifier = Modifier.height(8.dp))
-//                    Row(verticalAlignment = Alignment.CenterVertically) {
-//                        Text("✅ Smoke-free days target: ", fontSize = 16.sp)
-//                        Text("$smokeFreeTarget", fontSize = 16.sp)
-//                    }
-//                    Row(verticalAlignment = Alignment.CenterVertically) {
-//                        Text("🚫 Max e-cig uses: ", fontSize = 16.sp)
-//                        Text("$maxUsageTarget", fontSize = 16.sp)
-//                    }
-//                    Spacer(modifier = Modifier.height(8.dp))
-//                    Button(onClick = { isEditing = true }) {
-//                        Text("Edit")
-//                    }
-//                }
-//            }
-//
-//            Text("Calendar View", style = MaterialTheme.typography.titleSmall)
-//            AndroidView<CalendarView>(factory = { context ->
-//                CalendarView(context).apply {
-//                    minDate = firstDay.timeInMillis
-//                    maxDate = lastDay.timeInMillis
-//                }
-//            }, modifier = Modifier.fillMaxWidth().height(300.dp))
-//        }
-//    }
-//
-//    if (isEditing) {
-//        AlertDialog(
-//            onDismissRequest = { isEditing = false },
-//            confirmButton = {
-//                TextButton(onClick = { isEditing = false }) {
-//                    Text("Save")
-//                }
-//            },
-//            dismissButton = {
-//                TextButton(onClick = { isEditing = false }) {
-//                    Text("Cancel")
-//                }
-//            },
-//            title = { Text("Edit Weekly Goals") },
-//            text = {
-//                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-//                    OutlinedTextField(
-//                        value = smokeFreeTarget.toString(),
-//                        onValueChange = {
-//                            smokeFreeTarget = it.toIntOrNull() ?: 0
-//                        },
-//                        label = { Text("Smoke-free days") },
-//                        singleLine = true
-//                    )
-//                    OutlinedTextField(
-//                        value = maxUsageTarget.toString(),
-//                        onValueChange = {
-//                            maxUsageTarget = it.toIntOrNull() ?: 0
-//                        },
-//                        label = { Text("Max e-cig uses") },
-//                        singleLine = true
-//                    )
-//                }
-//            }
-//        )
-//    }
-//}
-
-
-
-//@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-//package com.example.quitesmoking
-//
-//import androidx.compose.foundation.Canvas
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.ArrowBack
-//import androidx.compose.material.icons.filled.Favorite
-//import androidx.compose.material.icons.filled.ThumbUp
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.geometry.Offset
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.graphics.PathEffect
-//import androidx.compose.ui.graphics.vector.ImageVector
-//import androidx.compose.ui.text.style.TextAlign
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.unit.sp
-//import androidx.navigation.NavController
-//import com.google.firebase.auth.FirebaseAuth
-//import com.google.firebase.firestore.FirebaseFirestore
-//import kotlinx.coroutines.tasks.await
-//import java.text.SimpleDateFormat
-//import java.util.*
-//
-//data class SmokeFreeData(val date: String, val cumulativeSmokeFree: Int, val usageEstimate: Int?)
-//data class BadgeInfo(val name: String, val icon: ImageVector, val requiredDays: Int, val current: Int)
-//
-//@Composable
-//fun StatsScreen(navController: NavController) {
-//    val db = FirebaseFirestore.getInstance()
-//    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-//
-//    var chartData by remember { mutableStateOf<List<SmokeFreeData>>(emptyList()) }
-//    var isLoading by remember { mutableStateOf(true) }
-//    var selectedTab by remember { mutableStateOf("All Time") }
-//    var cumulativeSmokeFree by remember { mutableIntStateOf(0) }
-//
-//    val tabs = listOf("Weekly", "Monthly", "All Time")
-//
-//    LaunchedEffect(Unit) {
-//        val snapshot = db.collection("users").document(userId)
-//            .collection("dailyCheckResponses").get().await()
-//
-//        val sorted = snapshot.documents.sortedBy { it.getTimestamp("timestamp")?.toDate() }
-//        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-//
-//        val data = mutableListOf<SmokeFreeData>()
-//        var cumulative = 0
-//        for (doc in sorted) {
-//            val date = sdf.format(doc.getTimestamp("timestamp")?.toDate() ?: continue)
-//            val answer = doc.getString("answer")
-//            val questionId = doc.getString("questionId")
-//            val usageEstimate = when (answer) {
-//                "1–5" -> 3
-//                "6–10" -> 8
-//                "10+" -> 12
-//                else -> null
-//            }
-//            if (questionId == "2" && (answer == "否" || answer?.lowercase()?.contains("no") == true)) {
-//                cumulative++
-//                data.add(SmokeFreeData(date, cumulative, null))
-//            } else if (questionId == "2.1") {
-//                data.add(SmokeFreeData(date, cumulative, usageEstimate))
-//            }
-//        }
-//        chartData = data
-//        cumulativeSmokeFree = cumulative
-//        isLoading = false
-//    }
-//
-//    val badges = listOf(
-//        BadgeInfo("One Day Free", Icons.Default.ThumbUp, 1, cumulativeSmokeFree),
-//        BadgeInfo("Health Master", Icons.Default.Favorite, 30, cumulativeSmokeFree)
-//    )
-//
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = { Text("Progress Tracker") },
-//                navigationIcon = {
-//                    IconButton(onClick = { navController.popBackStack() }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                }
-//            )
-//        }
-//    ) { innerPadding ->
-//        Column(
-//            modifier = Modifier
-//                .padding(innerPadding)
-//                .fillMaxSize()
-//                .padding(16.dp),
-//            verticalArrangement = Arrangement.spacedBy(16.dp)
-//        ) {
-//            TabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
-//                tabs.forEachIndexed { index, tab ->
-//                    Tab(
-//                        selected = selectedTab == tab,
-//                        onClick = { selectedTab = tab },
-//                        text = { Text(tab) }
-//                    )
-//                }
-//            }
-//
-//            if (isLoading) {
-//                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-//            } else {
-//                val filteredData = when (selectedTab) {
-//                    "Weekly" -> chartData.takeLast(7)
-//                    "Monthly" -> chartData.takeLast(30)
-//                    else -> chartData
-//                }
-//                StatsLineChart(filteredData)
-//                Spacer(Modifier.height(8.dp))
-//                UsageBarChart(filteredData)
-//                Spacer(Modifier.height(8.dp))
-//                Text("Your Graph, Your Story!", fontSize = 16.sp)
-//
-//                Spacer(Modifier.height(16.dp))
-//                Text("Badges Earned", style = MaterialTheme.typography.titleMedium)
-//                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-//                    badges.forEach { badge ->
-//                        BadgeCard(badge = badge, unlocked = cumulativeSmokeFree >= badge.requiredDays)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun StatsLineChart(data: List<SmokeFreeData>) {
-//    val maxY = (data.maxOfOrNull { it.cumulativeSmokeFree } ?: 10).coerceAtLeast(5)
-//    val padding = 32.dp
-//
-//    Canvas(modifier = Modifier
-//        .fillMaxWidth()
-//        .height(160.dp)) {
-//        val width = size.width - padding.toPx()
-//        val height = size.height - padding.toPx()
-//        val xStep = width / (data.size - 1).coerceAtLeast(1)
-//        val yStep = height / maxY
-//
-//        drawLine(Color.Gray, Offset(padding.toPx(), 0f), Offset(padding.toPx(), height), strokeWidth = 2f)
-//        drawLine(Color.Gray, Offset(padding.toPx(), height), Offset(size.width, height), strokeWidth = 2f)
-//
-//        val pathEffect = PathEffect.cornerPathEffect(10f)
-//        for (i in 0 until data.size - 1) {
-//            val s = Offset(padding.toPx() + i * xStep, height - data[i].cumulativeSmokeFree * yStep)
-//            val e = Offset(padding.toPx() + (i + 1) * xStep, height - data[i + 1].cumulativeSmokeFree * yStep)
-//            drawLine(Color(0xFF4CAF50), start = s, end = e, strokeWidth = 4f, pathEffect = pathEffect)
-//        }
-//    }
-//}
-//
-//@Composable
-//fun UsageBarChart(data: List<SmokeFreeData>) {
-//    val barWidth = 16.dp
-//    val maxUsage = (data.maxOfOrNull { it.usageEstimate ?: 0 } ?: 5).coerceAtLeast(5)
-//    val height = 100.dp
-//
-//    Canvas(modifier = Modifier
-//        .fillMaxWidth()
-//        .height(height)) {
-//        val spacing = 24f
-//        val xStep = spacing + barWidth.toPx()
-//
-//        data.forEachIndexed { index, item ->
-//            item.usageEstimate?.let { usage ->
-//                val barHeight = (usage / maxUsage.toFloat()) * size.height
-//                drawRect(
-//                    color = Color(0xFFFF7043),
-//                    topLeft = Offset(index * xStep, size.height - barHeight),
-//                    size = androidx.compose.ui.geometry.Size(barWidth.toPx(), barHeight)
-//                )
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun BadgeCard(badge: BadgeInfo, unlocked: Boolean) {
-//    Card(
-//        shape = RoundedCornerShape(16.dp),
-//        modifier = Modifier.size(100.dp),
-//        elevation = CardDefaults.cardElevation(4.dp)
-//    ) {
-//        Column(
-//            modifier = Modifier.padding(12.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            Icon(
-//                imageVector = badge.icon,
-//                contentDescription = badge.name,
-//                tint = if (unlocked) Color(0xFF4CAF50) else Color.Gray,
-//                modifier = Modifier.size(32.dp)
-//            )
-//            Spacer(Modifier.height(4.dp))
-//            Text(badge.name, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
-//            if (unlocked) {
-//                Text("Unlocked!", color = Color(0xFF4CAF50), style = MaterialTheme.typography.labelSmall)
-//            } else {
-//                Text("${badge.current}/${badge.requiredDays}", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
-//            }
-//        }
-//    }
-//}@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-//package com.example.quitesmoking
-//
-//import androidx.compose.foundation.Canvas
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.ArrowBack
-//import androidx.compose.material.icons.filled.Favorite
-//import androidx.compose.material.icons.filled.ThumbUp
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.geometry.Offset
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.graphics.PathEffect
-//import androidx.compose.ui.graphics.vector.ImageVector
-//import androidx.compose.ui.text.style.TextAlign
-//import androidx.compose.ui.unit.dp
-//import androidx.compose.ui.unit.sp
-//import androidx.navigation.NavController
-//import com.google.firebase.auth.FirebaseAuth
-//import com.google.firebase.firestore.FirebaseFirestore
-//import kotlinx.coroutines.tasks.await
-//import java.text.SimpleDateFormat
-//import java.util.*
-//
-//data class SmokeFreeData(val date: String, val cumulativeSmokeFree: Int, val usageEstimate: Int?)
-//data class BadgeInfo(val name: String, val icon: ImageVector, val requiredDays: Int, val current: Int)
-//
-//@Composable
-//fun StatsScreen(navController: NavController) {
-//    val db = FirebaseFirestore.getInstance()
-//    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-//
-//    var chartData by remember { mutableStateOf<List<SmokeFreeData>>(emptyList()) }
-//    var isLoading by remember { mutableStateOf(true) }
-//    var selectedTab by remember { mutableStateOf("All Time") }
-//    var cumulativeSmokeFree by remember { mutableIntStateOf(0) }
-//
-//    val tabs = listOf("Weekly", "Monthly", "All Time")
-//
-//    LaunchedEffect(Unit) {
-//        val snapshot = db.collection("users").document(userId)
-//            .collection("dailyCheckResponses").get().await()
-//
-//        val sorted = snapshot.documents.sortedBy { it.getTimestamp("timestamp")?.toDate() }
-//        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-//
-//        val data = mutableListOf<SmokeFreeData>()
-//        var cumulative = 0
-//        for (doc in sorted) {
-//            val date = sdf.format(doc.getTimestamp("timestamp")?.toDate() ?: continue)
-//            val answer = doc.getString("answer")
-//            val questionId = doc.getString("questionId")
-//            val usageEstimate = when (answer) {
-//                "1–5" -> 3
-//                "6–10" -> 8
-//                "10+" -> 12
-//                else -> null
-//            }
-//            if (questionId == "2" && (answer == "否" || answer?.lowercase()?.contains("no") == true)) {
-//                cumulative++
-//                data.add(SmokeFreeData(date, cumulative, null))
-//            } else if (questionId == "2.1") {
-//                data.add(SmokeFreeData(date, cumulative, usageEstimate))
-//            }
-//        }
-//        chartData = data
-//        cumulativeSmokeFree = cumulative
-//        isLoading = false
-//    }
-//
-//    val badges = listOf(
-//        BadgeInfo("One Day Free", Icons.Default.ThumbUp, 1, cumulativeSmokeFree),
-//        BadgeInfo("Health Master", Icons.Default.Favorite, 30, cumulativeSmokeFree)
-//    )
-//
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = { Text("Progress Tracker") },
-//                navigationIcon = {
-//                    IconButton(onClick = { navController.popBackStack() }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                }
-//            )
-//        }
-//    ) { innerPadding ->
-//        Column(
-//            modifier = Modifier
-//                .padding(innerPadding)
-//                .fillMaxSize()
-//                .padding(16.dp),
-//            verticalArrangement = Arrangement.spacedBy(16.dp)
-//        ) {
-//            TabRow(selectedTabIndex = tabs.indexOf(selectedTab)) {
-//                tabs.forEachIndexed { index, tab ->
-//                    Tab(
-//                        selected = selectedTab == tab,
-//                        onClick = { selectedTab = tab },
-//                        text = { Text(tab) }
-//                    )
-//                }
-//            }
-//
-//            if (isLoading) {
-//                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-//            } else {
-//                val filteredData = when (selectedTab) {
-//                    "Weekly" -> chartData.takeLast(7)
-//                    "Monthly" -> chartData.takeLast(30)
-//                    else -> chartData
-//                }
-//                StatsLineChart(filteredData)
-//                Spacer(Modifier.height(8.dp))
-//                UsageBarChart(filteredData)
-//                Spacer(Modifier.height(8.dp))
-//                Text("Your Graph, Your Story!", fontSize = 16.sp)
-//
-//                Spacer(Modifier.height(16.dp))
-//                Text("Badges Earned", style = MaterialTheme.typography.titleMedium)
-//                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-//                    badges.forEach { badge ->
-//                        BadgeCard(badge = badge, unlocked = cumulativeSmokeFree >= badge.requiredDays)
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun StatsLineChart(data: List<SmokeFreeData>) {
-//    val maxY = (data.maxOfOrNull { it.cumulativeSmokeFree } ?: 10).coerceAtLeast(5)
-//    val padding = 32.dp
-//
-//    Canvas(modifier = Modifier
-//        .fillMaxWidth()
-//        .height(160.dp)) {
-//        val width = size.width - padding.toPx()
-//        val height = size.height - padding.toPx()
-//        val xStep = width / (data.size - 1).coerceAtLeast(1)
-//        val yStep = height / maxY
-//
-//        drawLine(Color.Gray, Offset(padding.toPx(), 0f), Offset(padding.toPx(), height), strokeWidth = 2f)
-//        drawLine(Color.Gray, Offset(padding.toPx(), height), Offset(size.width, height), strokeWidth = 2f)
-//
-//        val pathEffect = PathEffect.cornerPathEffect(10f)
-//        for (i in 0 until data.size - 1) {
-//            val s = Offset(padding.toPx() + i * xStep, height - data[i].cumulativeSmokeFree * yStep)
-//            val e = Offset(padding.toPx() + (i + 1) * xStep, height - data[i + 1].cumulativeSmokeFree * yStep)
-//            drawLine(Color(0xFF4CAF50), start = s, end = e, strokeWidth = 4f, pathEffect = pathEffect)
-//        }
-//    }
-//}
-//
-//@Composable
-//fun UsageBarChart(data: List<SmokeFreeData>) {
-//    val barWidth = 16.dp
-//    val maxUsage = (data.maxOfOrNull { it.usageEstimate ?: 0 } ?: 5).coerceAtLeast(5)
-//    val height = 100.dp
-//
-//    Canvas(modifier = Modifier
-//        .fillMaxWidth()
-//        .height(height)) {
-//        val spacing = 24f
-//        val xStep = spacing + barWidth.toPx()
-//
-//        data.forEachIndexed { index, item ->
-//            item.usageEstimate?.let { usage ->
-//                val barHeight = (usage / maxUsage.toFloat()) * size.height
-//                drawRect(
-//                    color = Color(0xFFFF7043),
-//                    topLeft = Offset(index * xStep, size.height - barHeight),
-//                    size = androidx.compose.ui.geometry.Size(barWidth.toPx(), barHeight)
-//                )
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun BadgeCard(badge: BadgeInfo, unlocked: Boolean) {
-//    Card(
-//        shape = RoundedCornerShape(16.dp),
-//        modifier = Modifier.size(100.dp),
-//        elevation = CardDefaults.cardElevation(4.dp)
-//    ) {
-//        Column(
-//            modifier = Modifier.padding(12.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            Icon(
-//                imageVector = badge.icon,
-//                contentDescription = badge.name,
-//                tint = if (unlocked) Color(0xFF4CAF50) else Color.Gray,
-//                modifier = Modifier.size(32.dp)
-//            )
-//            Spacer(Modifier.height(4.dp))
-//            Text(badge.name, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
-//            if (unlocked) {
-//                Text("Unlocked!", color = Color(0xFF4CAF50), style = MaterialTheme.typography.labelSmall)
-//            } else {
-//                Text("${badge.current}/${badge.requiredDays}", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
-//            }
-//        }
-//    }
-//}

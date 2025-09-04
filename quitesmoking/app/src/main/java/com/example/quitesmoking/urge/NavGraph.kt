@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.example.quitesmoking.urge.CravingTipsScreen
 import com.example.quitesmoking.urge.MindfulnessVideoPlayerScreen
 import com.example.quitesmoking.urge.UrgeTabScreen
+import com.example.quitesmoking.urge.WithdrawalReliefTipsScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -33,6 +34,11 @@ fun NavGraph(navController: NavHostController) {
             val encodedUrl = backStackEntry.arguments?.getString("videoUrl") ?: ""
             val decodedUrl = Uri.decode(encodedUrl) // ✅ Safely decode URL
             MindfulnessVideoPlayerScreen(navController = navController, videoUrl = decodedUrl)
+        }
+
+        // Withdrawal relief tips screen
+        composable("withdrawal_relief_tips") {
+            WithdrawalReliefTipsScreen(navController)
         }
     }
 }
