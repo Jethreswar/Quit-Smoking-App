@@ -72,7 +72,7 @@ fun RecommendedGamesSection() {
             items(recommendedApps) { app ->
                 Card(
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(120.dp)
                         .clickable {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(app.url))
                             context.startActivity(intent)
@@ -176,15 +176,15 @@ fun HomeScreen(navController: NavController) {
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(24.dp)
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     GreetingMessageWithCheckinButton()
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Stats Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -199,11 +199,11 @@ fun HomeScreen(navController: NavController) {
                             Text("$currentStreak", fontSize = 32.sp, color = Color(0xFFFF5722), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     Text("Money Saved", style = MaterialTheme.typography.bodyLarge)
-                    Text("$${"%.2f".format(moneySaved)}", fontSize = 28.sp, color = Color(0xFFFF7043), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                    Text("$${"%.2f".format(moneySaved)}", fontSize = 24.sp, color = Color(0xFFFF7043))
                 }
             }
 
@@ -261,7 +261,7 @@ fun HomeScreen(navController: NavController) {
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text("Daily Motivation", style = MaterialTheme.typography.titleMedium)
@@ -287,6 +287,29 @@ fun HomeScreen(navController: NavController) {
     }
 }
 
+@Composable
+fun DashboardIconButton(icon: ImageVector, label: String, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .width(100.dp)
+            .height(90.dp),
+        shape = RoundedCornerShape(12.dp),
+        onClick = onClick,
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(imageVector = icon, contentDescription = label)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(text = label, fontSize = 12.sp)
+        }
+    }
+}
 
 
 
@@ -549,7 +572,7 @@ fun TopButtonGroup(navController: NavController) {
     ) {
         // Morning/Night Check-in Button
         IconButton(
-            onClick = { 
+            onClick = {
                 navController.navigate(if (isCurrentlyMorning()) Routes.MORNING_CHECK else Routes.NIGHT_CHECK)
             },
             modifier = Modifier.size(48.dp)
@@ -561,10 +584,10 @@ fun TopButtonGroup(navController: NavController) {
                 modifier = Modifier.size(24.dp)
             )
         }
-        
+
         // Settings Button
         IconButton(
-            onClick = { 
+            onClick = {
                 // TODO: Navigate to settings screen
                 // navController.navigate(Routes.SETTINGS)
             },
@@ -577,10 +600,10 @@ fun TopButtonGroup(navController: NavController) {
                 modifier = Modifier.size(24.dp)
             )
         }
-        
+
         // Quick Help Button
         IconButton(
-            onClick = { 
+            onClick = {
                 // TODO: Navigate to help screen or show help dialog
                 // navController.navigate(Routes.HELP)
             },
