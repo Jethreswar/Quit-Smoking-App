@@ -233,7 +233,28 @@ fun HomeScreen(navController: NavController) {
             }
 
 
-            Card(
+
+            // Dashboard navigation icons
+//            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    DynamicCheckInButton(navController)
+//
+//                }
+//
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    horizontalArrangement = Arrangement.SpaceBetween
+//                ) {
+//                    DynamicCheckInButton(navController)
+//
+//                }
+//            }
+
+                Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F5)),
                     shape = RoundedCornerShape(16.dp),
