@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -48,6 +50,11 @@ private val LAST_CHECKIN_KEY = stringPreferencesKey("last_checkin_date")
 
 data class GameApp(val name: String, val url: String)
 
+private fun isCurrentlyMorning(): Boolean {
+    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    return hour in 2..20
+}
+
 @Composable
 fun RecommendedGamesSection() {
     val context = LocalContext.current
@@ -65,7 +72,7 @@ fun RecommendedGamesSection() {
             items(recommendedApps) { app ->
                 Card(
                     modifier = Modifier
-                        .size(120.dp)
+                        .size(100.dp)
                         .clickable {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(app.url))
                             context.startActivity(intent)
@@ -90,7 +97,7 @@ fun RecommendedGamesSection() {
     }
 }
 
-@SuppressLint("NewApi")
+@SuppressLint("NewApi", "UNUSED_PARAMETER")
 @Composable
 fun HomeScreen(navController: NavController) {
     val userId = FirebaseAuth.getInstance().currentUser?.uid
@@ -142,21 +149,24 @@ fun HomeScreen(navController: NavController) {
     }
 
     Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 24.dp),
+        modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                .padding(bottom = 88.dp) // Add padding for bottom navigation bar
+                .verticalScroll(androidx.compose.foundation.rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Quit Smoking Tracker",
-                style = MaterialTheme.typography.headlineMedium,
+            // Button group in top right
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
+                horizontalArrangement = Arrangement.End
+            ) {
+                TopButtonGroup(navController = navController)
+            }
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -166,17 +176,34 @@ fun HomeScreen(navController: NavController) {
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(24.dp)
+                        .padding(16.dp)
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     GreetingMessageWithCheckinButton()
-//                    Text("Days Smoke-Free", style = MaterialTheme.typography.bodyLarge)
-//                    Text("$smokeFreeDays", fontSize = 48.sp, color = Color(0xFF3F51B5))
-//                    Text("Current Streak: $currentStreak 🔥", style = MaterialTheme.typography.bodyMedium)
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Stats Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Days Smoke-Free", style = MaterialTheme.typography.bodyMedium)
+                            Text("$smokeFreeDays", fontSize = 32.sp, color = Color(0xFF3F51B5), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Current Streak", style = MaterialTheme.typography.bodyMedium)
+                            Text("$currentStreak", fontSize = 32.sp, color = Color(0xFFFF5722), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
                     Text("Money Saved", style = MaterialTheme.typography.bodyLarge)
-                    Text("$${"%.2f".format(moneySaved)}", fontSize = 24.sp, color = Color(0xFFFF7043))
+                    Text("$${"%.2f".format(moneySaved)}", fontSize = 28.sp, color = Color(0xFFFF7043), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                 }
             }
 
@@ -205,6 +232,8 @@ fun HomeScreen(navController: NavController) {
                 )
             }
 
+
+
             // Dashboard navigation icons
 //            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
 //
@@ -232,7 +261,7 @@ fun HomeScreen(navController: NavController) {
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Column(
-                        modifier = Modifier.padding(20.dp),
+                        modifier = Modifier.padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text("Daily Motivation", style = MaterialTheme.typography.titleMedium)
@@ -289,12 +318,12 @@ fun GreetingMessageWithCheckinButton() {
     // ✅ whether Check-in or not
     LaunchedEffect(Unit) {
         if (userId != null) {
-            val todayStart = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.time
+//            val todayStart = Calendar.getInstance().apply {
+//                set(Calendar.HOUR_OF_DAY, 0)
+//                set(Calendar.MINUTE, 0)
+//                set(Calendar.SECOND, 0)
+//                set(Calendar.MILLISECOND, 0)
+//            }.time
 
 //            val snapshot = db.collection("checkins")
 //                .whereEqualTo("userId", userId)
@@ -507,6 +536,61 @@ fun DynamicCheckInButton(navController: NavController) {
                 text = label,
                 fontSize = 12.sp,
                 color = if (alreadyDone) Color.Gray else LocalContentColor.current
+            )
+        }
+    }
+}
+
+@Composable
+fun TopButtonGroup(navController: NavController) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Morning/Night Check-in Button
+        IconButton(
+            onClick = { 
+                navController.navigate(if (isCurrentlyMorning()) Routes.MORNING_CHECK else Routes.NIGHT_CHECK)
+            },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = if (isCurrentlyMorning()) Icons.Default.WbSunny else Icons.Default.NightsStay,
+                contentDescription = if (isCurrentlyMorning()) "Morning Check-in" else "Night Check-in",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        
+        // Settings Button
+        IconButton(
+            onClick = { 
+                // TODO: Navigate to settings screen
+                // navController.navigate(Routes.SETTINGS)
+            },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        
+        // Quick Help Button
+        IconButton(
+            onClick = { 
+                // TODO: Navigate to help screen or show help dialog
+                // navController.navigate(Routes.HELP)
+            },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Help,
+                contentDescription = "Quick Help",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
             )
         }
     }
