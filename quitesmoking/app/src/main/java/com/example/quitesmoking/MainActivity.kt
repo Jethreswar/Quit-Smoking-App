@@ -3,6 +3,7 @@ package com.example.quitesmoking
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.*
 import androidx.navigation.compose.*
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -16,6 +17,7 @@ import com.example.quitesmoking.navigation.Routes
 import com.example.quitesmoking.ui.MorningCheckInScreen
 import com.example.quitesmoking.ui.NightCheckInScreen
 import com.example.quitesmoking.ui.WeeklyGoalBuilderScreen
+import com.example.quitesmoking.ui.LogPurchaseScreen
 import com.example.quitesmoking.ui.theme.QuitesmokingTheme
 import com.example.quitesmoking.HomeScreen
 import com.example.quitesmoking.StatsScreen
@@ -35,11 +37,18 @@ class MainActivity : ComponentActivity() {
             QuitesmokingTheme {
                 val navController = rememberNavController()
 
-                NavHost(
-                    navController = navController,
-                    startDestination = if (FirebaseAuth.getInstance().currentUser != null)
-                        Routes.HOME else Routes.LOGIN
-                ) {
+                Scaffold(
+                    bottomBar = {
+                        if (FirebaseAuth.getInstance().currentUser != null) {
+                            BottomBar(navController = navController)
+                        }
+                    }
+                ) { paddingValues ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = if (FirebaseAuth.getInstance().currentUser != null)
+                            Routes.HOME else Routes.LOGIN
+                    ) {
                     /* ---------- core & auth ---------- */
                     composable(Routes.HOME)     { HomeScreen(navController) }
                     composable(Routes.LOGIN)    { LoginScreen(navController) }
@@ -57,6 +66,9 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.MORNING_CHECK)    { MorningCheckInScreen(navController) }
                     composable(Routes.NIGHT_CHECK)      { NightCheckInScreen(navController) }
                     composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(navController) }
+                    
+                    /* ---------- Purchase tracking ---------- */
+                    composable(Routes.LOG_PURCHASE)     { LogPurchaseScreen(navController) }
 
                     /* ---------- craving tips ---------- */
                     composable("craving_tips") {
@@ -75,6 +87,7 @@ class MainActivity : ComponentActivity() {
                     /* ---------- withdrawal relief tips ---------- */
                     composable("withdrawal_relief_tips") {
                         WithdrawalReliefTipsScreen(navController)
+                    }
                     }
                 }
             }
