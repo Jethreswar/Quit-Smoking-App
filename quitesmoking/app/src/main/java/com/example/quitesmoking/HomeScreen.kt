@@ -254,33 +254,33 @@ fun HomeScreen(navController: NavController) {
 //                }
 //            }
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F5)),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(4.dp)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F5)),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Daily Motivation", style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "\"Every time you resist a craving, you're one step closer to freedom.\"",
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            "- Your Future Self",
-                            modifier = Modifier.fillMaxWidth(),
-                            color = Color(0xFF3F51B5),
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    Text("Daily Motivation", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "\"Every time you resist a craving, you're one step closer to freedom.\"",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "- Your Future Self",
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color(0xFF3F51B5),
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center
+                    )
                 }
+            }
 
             RecommendedGamesSection()
         }
@@ -596,6 +596,21 @@ fun TopButtonGroup(navController: NavController) {
             Icon(
                 imageVector = Icons.Default.Settings,
                 contentDescription = "Settings",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        // Log Purchase Button
+        IconButton(
+            onClick = {
+                navController.navigate(Routes.LOG_PURCHASE)
+            },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Log Purchase",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )

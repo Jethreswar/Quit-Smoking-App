@@ -23,7 +23,7 @@ import com.example.quitesmoking.navigation.Routes
 import com.example.quitesmoking.ui.MorningCheckInScreen
 import com.example.quitesmoking.ui.NightCheckInScreen
 import com.example.quitesmoking.ui.WeeklyGoalBuilderScreen
-//import com.example.quitesmoking.ui.LogPurchaseScreen
+import com.example.quitesmoking.ui.LogPurchaseScreen
 import com.example.quitesmoking.ui.theme.QuitesmokingTheme
 import com.example.quitesmoking.HomeScreen
 import com.example.quitesmoking.StatsScreen
@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.MORNING_CHECK) { MorningCheckInScreen(navController) }
                     composable(Routes.NIGHT_CHECK)   { NightCheckInScreen(navController) }
                     /* ---------- Purchase tracking ---------- */
-//                    composable(Routes.LOG_PURCHASE)     { LogPurchaseScreen(navController) }
+                    composable(Routes.LOG_PURCHASE)     { LogPurchaseScreen(navController) }
                     
                     /* ---------- craving tips ---------- */
                     composable("craving_tips") {
