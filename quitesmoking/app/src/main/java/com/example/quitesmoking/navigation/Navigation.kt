@@ -44,4 +44,7 @@ object Routes {
     const val MORNING_CHECK     = "morning_check"
     const val NIGHT_CHECK       = "night_check"
     const val WEEKLY_GOAL_EDIT  = "weekly_goal"
+    
+    // ───────── Purchase tracking ─────────
+    const val LOG_PURCHASE      = "log_purchase"
 }
