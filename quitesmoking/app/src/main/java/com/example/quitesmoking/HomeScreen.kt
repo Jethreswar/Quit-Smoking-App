@@ -156,7 +156,6 @@ fun HomeScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = 16.dp, end = 16.dp, top = 8.dp)
-                .padding(bottom = 88.dp) // Add padding for bottom navigation bar
                 .verticalScroll(androidx.compose.foundation.rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
