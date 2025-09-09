@@ -6,39 +6,40 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.*
-import androidx.navigation.NavController
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import com.example.quitesmoking.navigation.Routes
-import androidx.datastore.preferences.preferencesDataStore
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.*
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import androidx.navigation.NavController
+import com.example.quitesmoking.navigation.Routes
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 import java.util.Date
-import java.text.SimpleDateFormat
 import java.util.Locale
+import com.example.quitesmoking.ui.HelpInfoOverlay
+
 /* check for firebase*/
 
 /* Firebase Setup Announcement*/
@@ -106,7 +107,7 @@ fun HomeScreen(navController: NavController) {
     var smokeFreeDays by remember { mutableIntStateOf(0) }
     var currentStreak by remember { mutableIntStateOf(0) }
     var showDialog by remember { mutableStateOf(false) }
-
+    var showHelp by remember { mutableStateOf(false) }
     LaunchedEffect(userId) {
         if (userId != null) {
             val purchaseSnapshot = db.collection("users")
@@ -164,7 +165,8 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                TopButtonGroup(navController = navController)
+                TopButtonGroup(navController = navController,
+                    onHelp = { showHelp = true })
             }
 
             Card(
@@ -282,6 +284,9 @@ fun HomeScreen(navController: NavController) {
             }
 
             RecommendedGamesSection()
+            if (showHelp) {
+                HelpInfoOverlay(onDismiss = { showHelp = false })
+            }
         }
     }
 }
@@ -564,7 +569,7 @@ fun DynamicCheckInButton(navController: NavController) {
 }
 
 @Composable
-fun TopButtonGroup(navController: NavController) {
+fun TopButtonGroup(navController: NavController,  onHelp: () -> Unit) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -586,10 +591,7 @@ fun TopButtonGroup(navController: NavController) {
 
         // Settings Button
         IconButton(
-            onClick = {
-                // TODO: Navigate to settings screen
-                // navController.navigate(Routes.SETTINGS)
-            },
+            onClick = onHelp,
             modifier = Modifier.size(48.dp)
         ) {
             Icon(
@@ -617,10 +619,7 @@ fun TopButtonGroup(navController: NavController) {
 
         // Quick Help Button
         IconButton(
-            onClick = {
-                // TODO: Navigate to help screen or show help dialog
-                // navController.navigate(Routes.HELP)
-            },
+            onClick = onHelp,
             modifier = Modifier.size(48.dp)
         ) {
             Icon(
