@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.quitesmoking.navigation.Routes
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -83,14 +86,15 @@ private fun filterEntriesByDateRange(entries: List<LeaderboardEntry>, range: Str
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LeaderboardScreen() {
+fun LeaderboardScreen(navController: NavController? = null) {
     val db = FirebaseFirestore.getInstance()
     var allLeaderboardEntries by remember { mutableStateOf<List<LeaderboardEntry>>(emptyList()) }
     var leaderboard by remember { mutableStateOf<List<LeaderboardEntry>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    
+
     // Date range selection
     val today = remember { Calendar.getInstance() }
     val format = SimpleDateFormat("MMM d", Locale.getDefault())
@@ -190,9 +194,74 @@ fun LeaderboardScreen() {
         }
     }
 
+    if (navController != null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("Leaderboard") },
+                    navigationIcon = {
+                        IconButton(onClick = { 
+                            // Navigate to Home tab since this is part of bottom navigation
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(0) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to Home")
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                LeaderboardContent(
+                    selectedRange = selectedRange,
+                    dateMenuExpanded = dateMenuExpanded,
+                    dateOptions = dateOptions,
+                    onRangeChange = { selectedRange = it },
+                    onMenuExpandedChange = { dateMenuExpanded = it },
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
+                    leaderboard = leaderboard,
+                    showTitle = false
+                )
+            }
+        }
+    } else {
+        LeaderboardContent(
+            selectedRange = selectedRange,
+            dateMenuExpanded = dateMenuExpanded,
+            dateOptions = dateOptions,
+            onRangeChange = { selectedRange = it },
+            onMenuExpandedChange = { dateMenuExpanded = it },
+            isLoading = isLoading,
+            errorMessage = errorMessage,
+            leaderboard = leaderboard,
+            showTitle = true
+        )
+    }
+}
+
+@Composable
+private fun LeaderboardContent(
+    selectedRange: String,
+    dateMenuExpanded: Boolean,
+    dateOptions: List<String>,
+    onRangeChange: (String) -> Unit,
+    onMenuExpandedChange: (Boolean) -> Unit,
+    isLoading: Boolean,
+    errorMessage: String?,
+    leaderboard: List<LeaderboardEntry>,
+    showTitle: Boolean
+) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Leaderboard", style = MaterialTheme.typography.titleLarge)
-        
+        if (showTitle) {
+            Text("Leaderboard", style = MaterialTheme.typography.titleLarge)
+        }
+    
         // Display current filter information
         if (selectedRange != "All Time") {
             Text(
@@ -207,7 +276,7 @@ fun LeaderboardScreen() {
         // Date range dropdown
         Box {
             OutlinedButton(
-                onClick = { dateMenuExpanded = true },
+                onClick = { onMenuExpandedChange(true) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(selectedRange)
@@ -217,26 +286,26 @@ fun LeaderboardScreen() {
             
             DropdownMenu(
                 expanded = dateMenuExpanded,
-                onDismissRequest = { dateMenuExpanded = false },
+                onDismissRequest = { onMenuExpandedChange(false) },
                 modifier = Modifier.fillMaxWidth(0.9f)
             ) {
                 dateOptions.forEach { option ->
                     DropdownMenuItem(
                         text = { Text(option) },
                         onClick = {
-                            selectedRange = option
-                            dateMenuExpanded = false
+                            onRangeChange(option)
+                            onMenuExpandedChange(false)
                         }
                     )
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
 
         when {
             isLoading -> CircularProgressIndicator()
-            errorMessage != null -> Text(errorMessage!!, color = MaterialTheme.colorScheme.error)
+            errorMessage != null -> Text(errorMessage, color = MaterialTheme.colorScheme.error)
             leaderboard.isEmpty() -> Text("No leaderboard data available for the selected date range.")
             else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 itemsIndexed(leaderboard) { index, entry ->
