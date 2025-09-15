@@ -3,12 +3,14 @@ package com.example.quitesmoking
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.*
 import androidx.navigation.NavType
@@ -24,6 +26,7 @@ import com.example.quitesmoking.ui.MorningCheckInScreen
 import com.example.quitesmoking.ui.NightCheckInScreen
 import com.example.quitesmoking.ui.WeeklyGoalBuilderScreen
 import com.example.quitesmoking.ui.LogPurchaseScreen
+import com.example.quitesmoking.ui.SettingsScreen
 import com.example.quitesmoking.ui.theme.QuitesmokingTheme
 import com.example.quitesmoking.HomeScreen
 import com.example.quitesmoking.StatsScreen
@@ -59,7 +62,7 @@ class MainActivity : ComponentActivity() {
                    
                     
  
-                    composable(Routes.LEAD)          { LeaderboardScreen() }
+                    composable(Routes.LEAD)          { LeaderboardScreen(navController) }
                     composable(Routes.COMMUNITY)     { CommunityScreen(navController) }
                     /* ---------- NEW morning / night / weekly ---------- */
                     composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(navController) }
@@ -85,6 +88,11 @@ class MainActivity : ComponentActivity() {
                     /* ---------- withdrawal relief tips ---------- */
                     composable("withdrawal_relief_tips") {
                         WithdrawalReliefTipsScreen(navController)
+                    }
+                    
+                    /* ---------- settings ---------- */
+                    composable(Routes.SETTINGS) {
+                        SettingsScreen(navController)
                     }
                     }
                 }

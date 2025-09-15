@@ -591,7 +591,9 @@ fun TopButtonGroup(navController: NavController,  onHelp: () -> Unit) {
 
         // Settings Button
         IconButton(
-            onClick = onHelp,
+            onClick = {
+                navController.navigate(Routes.SETTINGS)
+            },
             modifier = Modifier.size(48.dp)
         ) {
             Icon(
