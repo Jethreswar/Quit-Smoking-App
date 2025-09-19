@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.example.quitesmoking.navigation.Routes
 import com.example.quitesmoking.navigation.goHomeInTabs
 import androidx.navigation.NavGraph.Companion.findStartDestination
 
