@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Send
 import androidx.navigation.NavController
+import com.example.quitesmoking.navigation.goHomeInTabs
 import com.google.firebase.Timestamp
 
 // private val ktx: Any
@@ -30,7 +31,8 @@ data class Message(
 )
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatScreen(navController: NavController) {
+fun ChatScreen(navController: NavController, bottomNav: NavController) {
+    androidx.activity.compose.BackHandler { bottomNav.goHomeInTabs() }
     val db = FirebaseFirestore.getInstance()
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     var messageText by remember { mutableStateOf("") }
@@ -59,7 +61,7 @@ fun ChatScreen(navController: NavController) {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { bottomNav.goHomeInTabs() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }

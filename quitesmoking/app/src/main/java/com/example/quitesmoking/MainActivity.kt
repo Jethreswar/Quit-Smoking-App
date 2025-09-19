@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.LEAD)          { LeaderboardScreen(navController) }
                     composable(Routes.COMMUNITY)     { CommunityScreen(navController) }
                     /* ---------- NEW morning / night / weekly ---------- */
-                    composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(navController) }
+//                    composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(navController) }
                     composable(Routes.MORNING_CHECK) { MorningCheckInScreen(navController) }
                     composable(Routes.NIGHT_CHECK)   { NightCheckInScreen(navController) }
                     /* ---------- Purchase tracking ---------- */
@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
  */
 @Composable
 fun MainScreen(rootNavController: NavController) {
-    /*Use two different navigation Contollers*/
+    /*Use two different navigation Controllers*/
     val bottomNavController = rememberNavController()
     Scaffold(
         bottomBar = { BottomBar(bottomNavController) }
@@ -115,10 +115,10 @@ fun MainScreen(rootNavController: NavController) {
                 startDestination = Routes.HOME
             ) {
                 composable(Routes.HOME)     { HomeScreen(rootNavController) }
-                composable(Routes.URGE)     { UrgeTabScreen(rootNavController) }
-                composable(Routes.PROGRESS) { StatsScreen(rootNavController) }
-                composable(Routes.GPT_CHAT) { GPTChatScreen(rootNavController) }
-                composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(rootNavController) }
+                composable(Routes.URGE)     { UrgeTabScreen(rootNavController, bottomNavController) }
+                composable(Routes.PROGRESS) { StatsScreen(rootNavController, bottomNavController) }
+                composable(Routes.GPT_CHAT)    { GPTChatScreen(rootNavController, bottomNavController) }
+                composable(Routes.WEEKLY_GOAL_EDIT) { WeeklyGoalBuilderScreen(rootNavController, bottomNavController) }
             }
         }
     }

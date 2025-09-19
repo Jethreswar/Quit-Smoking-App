@@ -30,6 +30,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import com.example.quitesmoking.navigation.goHomeInTabs
 
 fun isNetworkAvailable(context: Context): Boolean {
     val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -69,7 +70,8 @@ object OpenAIClient {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GPTChatScreen(navController: NavController) {
+fun GPTChatScreen(navController: NavController, bottomNav: NavController) {
+    androidx.activity.compose.BackHandler { bottomNav.goHomeInTabs() }
     val messages = remember { mutableStateListOf<GPTMessage>() }
     var inputText by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
@@ -90,17 +92,8 @@ fun GPTChatScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Quit GPT") },
                 navigationIcon = {
-                    IconButton(onClick = { 
-                        // Navigate to Home tab since this is part of bottom navigation
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(0) {
-                                inclusive = false
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back to Home")
+                    IconButton(onClick = { bottomNav.goHomeInTabs() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
