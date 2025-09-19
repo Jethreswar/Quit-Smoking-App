@@ -9,10 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.quitesmoking.navigation.goHomeInTabs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityScreen(navController: NavController) {
+    androidx.activity.compose.BackHandler { navController.goHomeInTabs() }
     var selectedTab by remember { mutableStateOf(0) }
     val tabTitles = listOf("Chat", "Leaderboard")
 
@@ -21,7 +23,7 @@ fun CommunityScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Community") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.goHomeInTabs() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
@@ -58,7 +60,7 @@ fun CommunityScreen(navController: NavController) {
 
             // Content
             when (selectedTab) {
-                0 -> ChatScreen(navController)
+                0 -> ChatScreen(navController, navController)
                 1 -> LeaderboardScreen() // Placeholder, implement separately
             }
         }

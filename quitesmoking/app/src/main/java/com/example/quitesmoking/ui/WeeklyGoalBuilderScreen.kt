@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.quitesmoking.navigation.goHomeInTabs
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
@@ -94,7 +95,8 @@ private fun filterEntriesByDateRange(entries: List<LeaderboardEntry>, range: Str
 
 @SuppressLint("NewApi")
 @Composable
-fun WeeklyGoalBuilderScreen(navController: NavController) {
+fun WeeklyGoalBuilderScreen(navController: NavController, bottomNav: NavController) {
+    androidx.activity.compose.BackHandler { bottomNav.goHomeInTabs() }
     val db = FirebaseFirestore.getInstance()
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
     val scope = rememberCoroutineScope()
@@ -240,7 +242,7 @@ fun WeeklyGoalBuilderScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Quit EC") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { bottomNav.goHomeInTabs() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }

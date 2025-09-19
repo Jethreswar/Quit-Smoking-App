@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -19,20 +20,46 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.example.quitesmoking.navigation.Routes
+import com.example.quitesmoking.navigation.goHomeInTabs
+import androidx.navigation.NavGraph.Companion.findStartDestination
+
+fun NavController.goHomeInTabs() {
+    // This NavController is the bottomNavController
+    navigate(Routes.HOME) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UrgeTabScreen(navController: NavController) {
-    val context = LocalContext.current
+fun UrgeTabScreen(navController: NavController, bottomNav: NavController) {
 
+    // System back: always jump to Home tab
+    androidx.activity.compose.BackHandler {
+        bottomNav.goHomeInTabs()
+    }
+    val context = LocalContext.current
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Handle Cravings") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    IconButton(onClick = { navController.popBackStack() }) {
+//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+//                    }
+                    IconButton(onClick = { bottomNav.goHomeInTabs() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
+
                 }
             )
         }

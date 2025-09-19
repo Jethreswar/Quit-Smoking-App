@@ -34,9 +34,11 @@ import com.example.quitesmoking.model.DailySmokingStatus
 import com.example.quitesmoking.ui.SmokingCalendarView
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
-
+import com.example.quitesmoking.navigation.goHomeInTabs
 @Composable
-fun StatsScreen(navController: NavController) {
+fun StatsScreen(navController: NavController, bottomNav: NavController) {
+    androidx.activity.compose.BackHandler { bottomNav.goHomeInTabs() }
+
     val db = FirebaseFirestore.getInstance()
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     val scope = rememberCoroutineScope()
@@ -176,7 +178,7 @@ fun StatsScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Milestone Tracker") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { bottomNav.goHomeInTabs() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }

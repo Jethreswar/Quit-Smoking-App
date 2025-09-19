@@ -18,7 +18,7 @@ fun NavGraph(navController: NavHostController) {
 
         // Home screen for cravings
         composable("urge_main") {
-            UrgeTabScreen(navController)
+            UrgeTabScreen(navController,bottomNav = navController)
         }
 
         // Tips screen
