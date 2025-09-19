@@ -47,4 +47,7 @@ object Routes {
     
     // ───────── Purchase tracking ─────────
     const val LOG_PURCHASE      = "log_purchase"
+    
+    // ───────── Settings ─────────
+    const val SETTINGS          = "settings"
 }

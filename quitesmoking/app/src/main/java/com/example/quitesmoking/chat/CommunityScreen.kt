@@ -2,7 +2,7 @@ package com.example.quitesmoking.chat
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -10,6 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.quitesmoking.navigation.goHomeInTabs
+import com.example.quitesmoking.navigation.Routes
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,6 +25,7 @@ fun CommunityScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Community") },
                 navigationIcon = {
+
                     IconButton(onClick = { navController.goHomeInTabs() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
@@ -33,14 +36,14 @@ fun CommunityScreen(navController: NavController) {
         Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             // Header
             Text(
-                text = "\uD83D\uDCAC You’re not alone! Support each other with no judgement!",
+                text = "💬 You're not alone! Support each other with no judgement!",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "Be Kind. Encourage. Don’t Judge.",
+                text = "Be Kind. Encourage. Don't Judge.",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, bottom = 8.dp),
@@ -66,4 +69,3 @@ fun CommunityScreen(navController: NavController) {
         }
     }
 }
-

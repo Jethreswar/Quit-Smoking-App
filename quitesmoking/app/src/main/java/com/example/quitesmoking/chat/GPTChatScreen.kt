@@ -13,9 +13,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
+import com.example.quitesmoking.navigation.Routes
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -112,10 +113,11 @@ fun GPTChatScreen(navController: NavController, bottomNav: NavController) {
                         .weight(1f)
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color(0xFFF0F0F5),
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFFF0F0F5),
+                        unfocusedContainerColor = Color(0xFFF0F0F5),
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
                     )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -174,7 +176,7 @@ fun GPTChatScreen(navController: NavController, bottomNav: NavController) {
                         .size(48.dp)
                         .background(Color(0xFF673AB7), shape = CircleShape)
                 ) {
-                    Icon(Icons.Default.Send, contentDescription = "Send", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = Color.White)
                 }
             }
         }
@@ -212,190 +214,3 @@ fun GPTChatScreen(navController: NavController, bottomNav: NavController) {
         }
     }
 }
-
-
-//package com.example.quitesmoking.chat
-//
-//import android.content.Context
-//import android.net.ConnectivityManager
-//import android.net.NetworkCapabilities
-//import androidx.compose.foundation.background
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.foundation.lazy.LazyColumn
-//import androidx.compose.foundation.lazy.items
-//import androidx.compose.foundation.shape.CircleShape
-//import androidx.compose.foundation.shape.RoundedCornerShape
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.ArrowBack
-//import androidx.compose.material.icons.filled.Send
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.graphics.Color
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.unit.dp
-//import androidx.navigation.NavController
-//import kotlinx.coroutines.launch
-//import retrofit2.Retrofit
-//import retrofit2.converter.gson.GsonConverterFactory
-//import retrofit2.http.Body
-//import retrofit2.http.Headers
-//import retrofit2.http.POST
-//import android.widget.Toast
-//
-//// ===== 网络可用性检查 =====
-//fun isNetworkAvailable(context: Context): Boolean {
-//    val connectivityManager =
-//        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-//    val network = connectivityManager.activeNetwork ?: return false
-//    val networkCapabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-//    return networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-//}
-//
-//// ===== 数据模型 =====
-//data class GPTMessage(val role: String, val content: String)
-//data class ChatMessage(val role: String, val content: String)
-//data class ChatRequest(
-//    val model: String = "gpt-3.5-turbo",
-//    val messages: List<ChatMessage>,
-//    val temperature: Double = 0.7
-//)
-//data class ChatChoice(val message: ChatMessage)
-//data class ChatResponse(val choices: List<ChatChoice>)
-//
-//// ===== Retrofit 接口定义 =====
-//interface OpenAIService {
-//    @Headers(
-//        "Content-Type: application/json",
-//        "Authorization: Bearer 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" // ← 替换为你的 OpenAI API Key
-//    )
-//    @POST("v1/chat/completions")
-//    suspend fun getChatCompletion(@Body request: ChatRequest): retrofit2.Response<ChatResponse>
-//}
-//
-//object OpenAIClient {
-//    val api: OpenAIService by lazy {
-//        Retrofit.Builder()
-//            .baseUrl("https://api.openai.com/")
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .build()
-//            .create(OpenAIService::class.java)
-//    }
-//}
-//
-//// ===== Compose 聊天界面 =====
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun GPTChatScreen(navController: NavController) {
-//    val messages = remember { mutableStateListOf<GPTMessage>() }
-//    var inputText by remember { mutableStateOf("") }
-//    val scope = rememberCoroutineScope()
-//    val context = LocalContext.current
-//
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = { Text("Quit GPT") },
-//                navigationIcon = {
-//                    IconButton(onClick = { navController.popBackStack() }) {
-//                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-//                    }
-//                }
-//            )
-//        },
-//        bottomBar = {
-//            Row(
-//                modifier = Modifier
-//                    .padding(12.dp)
-//                    .fillMaxWidth(),
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//                TextField(
-//                    value = inputText,
-//                    onValueChange = { inputText = it },
-//                    placeholder = { Text("Type your message...") },
-//                    modifier = Modifier
-//                        .weight(1f)
-//                        .height(56.dp),
-//                    shape = RoundedCornerShape(28.dp),
-//                    colors = TextFieldDefaults.textFieldColors(
-//                        containerColor = Color(0xFFF0F0F5),
-//                        unfocusedIndicatorColor = Color.Transparent,
-//                        focusedIndicatorColor = Color.Transparent
-//                    )
-//                )
-//                Spacer(modifier = Modifier.width(8.dp))
-//                IconButton(
-//                    onClick = {
-//                        if (!isNetworkAvailable(context)) {
-//                            Toast.makeText(context, "No internet connection", Toast.LENGTH_SHORT).show()
-//                            return@IconButton
-//                        }
-//
-//                        if (inputText.isNotBlank()) {
-//                            val userMsg = GPTMessage("user", inputText)
-//                            messages.add(userMsg)
-//
-//                            scope.launch {
-//                                val request = ChatRequest(
-//                                    messages = listOf(ChatMessage("system", "You are a helpful assistant.")) +
-//                                            messages.map { ChatMessage(it.role, it.content) }
-//                                )
-//                                try {
-//                                    val response = OpenAIClient.api.getChatCompletion(request)
-//                                    val reply = response.body()?.choices?.firstOrNull()?.message
-//                                    if (reply != null) {
-//                                        messages.add(GPTMessage(reply.role, reply.content))
-//                                    } else {
-//                                        messages.add(GPTMessage("assistant", "No response received."))
-//                                    }
-//                                } catch (e: Exception) {
-//                                    messages.add(GPTMessage("assistant", "Error: ${e.localizedMessage}"))
-//                                }
-//                            }
-//
-//                            inputText = ""
-//                        }
-//                    },
-//                    modifier = Modifier
-//                        .size(48.dp)
-//                        .background(Color(0xFF673AB7), shape = CircleShape)
-//                ) {
-//                    Icon(Icons.Default.Send, contentDescription = "Send", tint = Color.White)
-//                }
-//            }
-//        }
-//    ) { padding ->
-//        LazyColumn(
-//            modifier = Modifier
-//                .padding(padding)
-//                .padding(horizontal = 16.dp, vertical = 8.dp)
-//                .fillMaxSize(),
-//            verticalArrangement = Arrangement.spacedBy(8.dp)
-//        ) {
-//            items(messages) { msg ->
-//                val isUser = msg.role == "user"
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
-//                ) {
-//                    Box(
-//                        modifier = Modifier
-//                            .background(
-//                                if (isUser) Color(0xFF673AB7) else Color(0xFFF0F0F5),
-//                                shape = RoundedCornerShape(16.dp)
-//                            )
-//                            .padding(12.dp)
-//                            .widthIn(max = 280.dp)
-//                    ) {
-//                        Text(
-//                            text = msg.content,
-//                            color = if (isUser) Color.White else Color.Black
-//                        )
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
