@@ -77,7 +77,7 @@ suspend fun loadAnswers(): AnswerBag {
 */
 suspend fun saveAnswer(id: String, value: Any?, deleteWhenNull: Boolean = false) {
     val obRef = obDocRef()
-        if (deleteWhenNull && value == null) {
+    if (deleteWhenNull && value == null) {
         db.runTransaction { tx ->
         tx.set(
         obRef,
