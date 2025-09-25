@@ -30,9 +30,11 @@ import com.example.quitesmoking.ui.SettingsScreen
 import com.example.quitesmoking.ui.theme.QuitesmokingTheme
 import com.example.quitesmoking.HomeScreen
 import com.example.quitesmoking.StatsScreen
+import com.example.quitesmoking.navigation.Routes.MINDFULNESS_LIST
 import com.example.quitesmoking.urge.CravingTipsScreen
 import com.example.quitesmoking.urge.UrgeTabScreen
 import com.example.quitesmoking.urge.MindfulnessVideoPlayerScreen
+import com.example.quitesmoking.urge.MindfulnessVideosScreen
 import com.example.quitesmoking.urge.WithdrawalReliefTipsScreen
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -74,6 +76,9 @@ class MainActivity : ComponentActivity() {
                     /* ---------- craving tips ---------- */
                     composable("craving_tips") {
                         CravingTipsScreen(navController)
+                    }
+                    composable(MINDFULNESS_LIST) {
+                        MindfulnessVideosScreen(navController)
                     }
 
                     /* ---------- mindfulness video ---------- */
