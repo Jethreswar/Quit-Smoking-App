@@ -77,6 +77,11 @@ dependencies {
     implementation("com.google.firebase:firebase-functions")
     implementation("com.google.firebase:firebase-crashlytics")
 
+    // ---- Add these two for your videos list ----
+    implementation("io.coil-kt:coil-compose:2.6.0")                  // thumbnails
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3") // Task.await()
+
+
     /* ---- AndroidX core libs ---- */
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -84,6 +89,11 @@ dependencies {
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
+
+    // for notifications scheduling
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
 
     /* ---- Tests & tooling (unchanged) ---- */
     testImplementation(libs.junit)

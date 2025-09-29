@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Today
@@ -306,7 +308,7 @@ private fun YearPickerDialog(
                     IconButton(
                         onClick = { selectedYear -= 1 }
                     ) {
-                        Icon(Icons.Default.KeyboardArrowLeft, "Previous year")
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null)
                     }
                     
                     Text(
@@ -318,7 +320,7 @@ private fun YearPickerDialog(
                     IconButton(
                         onClick = { selectedYear += 1 }
                     ) {
-                        Icon(Icons.Default.KeyboardArrowRight, "Next year")
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Next year")
                     }
                 }
                 

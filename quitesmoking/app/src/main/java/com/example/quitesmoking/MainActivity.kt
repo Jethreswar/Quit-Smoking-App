@@ -37,9 +37,13 @@ import com.example.quitesmoking.ui.NightCheckInScreen
 import com.example.quitesmoking.ui.SettingsScreen
 import com.example.quitesmoking.ui.WeeklyGoalBuilderScreen
 import com.example.quitesmoking.ui.theme.QuitesmokingTheme
+import com.example.quitesmoking.HomeScreen
+import com.example.quitesmoking.StatsScreen
+import com.example.quitesmoking.navigation.Routes.MINDFULNESS_LIST
 import com.example.quitesmoking.urge.CravingTipsScreen
 import com.example.quitesmoking.urge.MindfulnessVideoPlayerScreen
 import com.example.quitesmoking.urge.UrgeTabScreen
+import com.example.quitesmoking.urge.MindfulnessVideosScreen
 import com.example.quitesmoking.urge.WithdrawalReliefTipsScreen
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
@@ -139,9 +143,17 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.COMMUNITY)     { CommunityScreen(navController) }
                     composable(Routes.MORNING_CHECK) { MorningCheckInScreen(navController) }
                     composable(Routes.NIGHT_CHECK)   { NightCheckInScreen(navController) }
-                    composable(Routes.LOG_PURCHASE)  { LogPurchaseScreen(navController) }
 
-                    composable("craving_tips") { CravingTipsScreen(navController) }
+                    /* ---------- Purchase tracking ---------- */
+                    composable(Routes.LOG_PURCHASE)     { LogPurchaseScreen(navController) }
+                    
+                    /* ---------- craving tips ---------- */
+                    composable("craving_tips") {
+                        CravingTipsScreen(navController)
+                    }
+                    composable(MINDFULNESS_LIST) {
+                        MindfulnessVideosScreen(navController)
+                    }
 
                     composable(
                         route = "mindfulness_video_screen/{videoUrl}",

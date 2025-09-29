@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.quitesmoking.navigation.goHomeInTabs
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.example.quitesmoking.navigation.Routes.MINDFULNESS_LIST
 
 fun NavController.goHomeInTabs() {
     // This NavController is the bottomNavController
@@ -77,10 +78,14 @@ fun UrgeTabScreen(navController: NavController, bottomNav: NavController) {
             }
 
             // ✅ Use local mindfulness video resource
+//            CravingOptionButton("Mindfulness Videos") {
+//                val videoUrl = "local_sample" // Special identifier for local video
+//                navController.navigate("mindfulness_video_screen/$videoUrl")
+//            }
             CravingOptionButton("Mindfulness Videos") {
-                val videoUrl = "local_sample" // Special identifier for local video
-                navController.navigate("mindfulness_video_screen/$videoUrl")
+                navController.navigate(MINDFULNESS_LIST)
             }
+
 
             CravingOptionButton("Reach Out to Someone") {
                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:"))

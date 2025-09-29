@@ -1,5 +1,6 @@
 package com.example.quitesmoking.urge
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,6 +23,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.graphicsLayer
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -203,9 +209,17 @@ fun WithdrawalReliefTipsScreen(navController: NavController) {
             }
 
             // Individual symptom cards
-            items(withdrawalSymptoms) { symptom ->
-                WithdrawalSymptomCard(symptom = symptom)
+//            items(withdrawalSymptoms) { symptom ->
+//                WithdrawalSymptomCard(symptom = symptom)
+//            }
+            // Inside LazyColumn { ... }
+            items(
+                items = withdrawalSymptoms,
+                key = { it.title }   // stable key per item
+            ) { symptom ->
+                ExpandableSymptomCard(symptom = symptom)
             }
+
 
             // Emergency section
             item {
@@ -345,6 +359,160 @@ fun WithdrawalSymptomCard(symptom: WithdrawalSymptom) {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExpandableSymptomCard(
+    symptom: WithdrawalSymptom,
+    modifier: Modifier = Modifier
+) {
+    var expanded by rememberSaveable(symptom.title) { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(), // smooth height animation
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (expanded) MaterialTheme.colorScheme.surface else Color.White
+        ),
+        elevation = CardDefaults.cardElevation(if (expanded) 6.dp else 3.dp),
+        onClick = { expanded = !expanded } // tap anywhere toggles
+    ) {
+        Column {
+            // Header (always visible)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Leading accent
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(Color(0xFF1976D2), Color(0xFF64B5F6))
+                            ),
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = symptom.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0D47A1)
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = null,
+                            tint = Color(0xFF757575),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = symptom.duration,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF757575)
+                        )
+                    }
+                }
+
+                // Chevron rotates on expand
+                Icon(
+                    imageVector = Icons.Default.ArrowBack, // using AutoMirrored? If so, swap to appropriate arrow
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .graphicsLayer { rotationZ = if (expanded) 90f else -90f }, // rotate to chevron-down/up feel
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Divider between header and details
+            if (expanded) {
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+            }
+
+            // Body (revealed on expand)
+            AnimatedVisibility(visible = expanded) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = symptom.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFF424242)
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Text(
+                        text = "Relief Tips",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF388E3C)
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
+                    symptom.tips.forEach { tip ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Text(
+                                text = "•  ",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFF388E3C)
+                            )
+                            Text(
+                                text = tip,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        Spacer(Modifier.height(6.dp))
+                    }
+
+                    // Optional: “Quick actions” row
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SuggestionChip("Breathe")
+                        SuggestionChip("Hydrate")
+                        SuggestionChip("Move")
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SuggestionChip(text: String) {
+    AssistChip(
+        onClick = { /* hook quick action if needed */ },
+        label = { Text(text) },
+        shape = RoundedCornerShape(12.dp),
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            labelColor = MaterialTheme.colorScheme.primary
+        )
+    )
 }
 
 data class WithdrawalSymptom(
