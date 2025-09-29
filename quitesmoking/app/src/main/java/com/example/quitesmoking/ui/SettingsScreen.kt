@@ -14,15 +14,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(
+    navController: NavController,
+    // Inject onboarding behavior from caller; keeps this composable generic
+    onEditOnboarding: () -> Unit = {}
+) {
     var showLogoutDialog by remember { mutableStateOf(false) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,6 +61,12 @@ fun SettingsScreen(navController: NavController) {
                         title = "Email Settings",
                         subtitle = "Manage email notifications",
                         onClick = { /* Navigate to email settings */ }
+                    ),
+                    SettingsItem(
+                        icon = Icons.Default.Edit, // better icon for editing
+                        title = "Edit OnBoarding",
+                        subtitle = "Update your onboarding answers",
+                        onClick = onEditOnboarding // <-- injected
                     )
                 )
             )
@@ -176,14 +185,10 @@ fun SettingsScreen(navController: NavController) {
                         }
                         showLogoutDialog = false
                     }
-                ) {
-                    Text("Sign Out", color = Color.Red)
-                }
+                ) { Text("Sign Out", color = Color.Red) }
             },
             dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = { showLogoutDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -202,7 +207,7 @@ fun SettingsSection(
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(vertical = 8.dp)
         )
-        
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -239,12 +244,10 @@ fun SettingsItemRow(
                 tint = item.textColor ?: MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
-            
+
             Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title,
                     style = MaterialTheme.typography.bodyLarge,
@@ -254,11 +257,12 @@ fun SettingsItemRow(
                     Text(
                         text = item.subtitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = item.textColor?.copy(alpha = 0.75f)
+                            ?: MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            
+
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "Navigate",
@@ -266,7 +270,7 @@ fun SettingsItemRow(
                 modifier = Modifier.size(20.dp)
             )
         }
-        
+
         if (showDivider) {
             Divider(
                 modifier = Modifier.padding(start = 56.dp),

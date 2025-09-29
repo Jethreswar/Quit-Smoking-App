@@ -12,8 +12,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -40,6 +42,7 @@ import com.example.quitesmoking.ui.theme.QuitesmokingTheme
 import com.example.quitesmoking.HomeScreen
 import com.example.quitesmoking.StatsScreen
 import com.example.quitesmoking.navigation.Routes.MINDFULNESS_LIST
+import com.example.quitesmoking.onboarding.EditOnboarding
 import com.example.quitesmoking.urge.CravingTipsScreen
 import com.example.quitesmoking.urge.MindfulnessVideoPlayerScreen
 import com.example.quitesmoking.urge.UrgeTabScreen
@@ -164,7 +167,23 @@ class MainActivity : ComponentActivity() {
                     }
 
                     composable("withdrawal_relief_tips") { WithdrawalReliefTipsScreen(navController) }
-                    composable(Routes.SETTINGS) { SettingsScreen(navController) }
+                    composable(Routes.SETTINGS) {
+                        val ctx = LocalContext.current
+                        val scope = rememberCoroutineScope()
+
+                        val repo = remember {
+                            OnboardingRepository(
+                                FirebaseFirestore.getInstance(),
+                                FirebaseAuth.getInstance()
+                            )
+                        }
+                        val editOnboarding = remember { EditOnboarding(repo) }
+
+                        SettingsScreen(
+                            navController = navController,
+                            onEditOnboarding = editOnboarding.action(navController, scope, ctx)
+                        )
+                    }
                 }
             }
         }
