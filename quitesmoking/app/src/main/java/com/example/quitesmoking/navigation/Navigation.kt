@@ -53,4 +53,10 @@ object Routes {
     
     // ───────── Settings ─────────
     const val SETTINGS          = "settings"
+
+    // ───────── ONBOARDING ─────────
+    const val ONBOARDING= "onboarding"
+    const val SPLASH = "splash"
+
+    const val ONBOARDING_SUMMARY = "onboarding_summary"
 }

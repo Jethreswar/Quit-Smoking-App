@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
+    alias(libs.plugins.kotlin.serialization)
 //    id("com.android.application")
 //    id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
@@ -64,6 +64,8 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.1")
+
     /* ---- Firebase ---- */
 //    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
@@ -84,6 +86,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.foundation.android)
+    implementation(libs.androidx.foundation.android)
 
     // for notifications scheduling
     implementation("androidx.datastore:datastore-preferences:1.1.1")
