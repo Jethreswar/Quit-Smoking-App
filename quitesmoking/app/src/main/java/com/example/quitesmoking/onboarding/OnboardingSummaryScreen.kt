@@ -77,13 +77,6 @@ fun OnboardingSummaryScreen(
                     }
                 }
             }
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Raw JSON (also printed in Logcat with tag ONBOARDING_SUMMARY):",
-                style = MaterialTheme.typography.titleSmall
-            )
-            Spacer(Modifier.height(6.dp))
-            Text(pretty, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
