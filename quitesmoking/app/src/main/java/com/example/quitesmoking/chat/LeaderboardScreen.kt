@@ -25,63 +25,41 @@ import java.util.*
 // Function to filter leaderboard entries by selected date range
 private fun filterEntriesByDateRange(entries: List<LeaderboardEntry>, range: String): List<LeaderboardEntry> {
     return try {
-        // If range is "All Time" or empty, return all entries
         if (range.isBlank() || range == "All Time") return entries
-        
-        // Parse the selected range (e.g., "Aug 22 - Aug 24")
         val dateParts = range.split(" - ")
         if (dateParts.size != 2) return entries
-        
-        val startDateStr = dateParts[0].trim()
-        val endDateStr = dateParts[1].trim()
-        
-        // If either date part is empty, return all entries
+        // Remove any trailing labels like "(Last 7 days)" from both ends
+        val startDateStr = dateParts[0].trim().substringBefore(" (")
+        val endDateStr = dateParts[1].trim().substringBefore(" (")
         if (startDateStr.isBlank() || endDateStr.isBlank()) return entries
-        
-        // Parse dates using the same format as dateOptions
         val format = SimpleDateFormat("MMM d", Locale.getDefault())
         val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-        
         val startDate = format.parse("$startDateStr $currentYear")
         val endDate = format.parse("$endDateStr $currentYear")
-        
         if (startDate == null || endDate == null) return entries
-        
-        // Create calendar instances for comparison
         val startCal = Calendar.getInstance().apply { time = startDate }
         val endCal = Calendar.getInstance().apply { time = endDate }
-        
-        // Set time to start and end of day for proper comparison
+        // Normalize to start/end of day
         startCal.set(Calendar.HOUR_OF_DAY, 0)
         startCal.set(Calendar.MINUTE, 0)
         startCal.set(Calendar.SECOND, 0)
         startCal.set(Calendar.MILLISECOND, 0)
-        
         endCal.set(Calendar.HOUR_OF_DAY, 23)
         endCal.set(Calendar.MINUTE, 59)
         endCal.set(Calendar.SECOND, 59)
         endCal.set(Calendar.MILLISECOND, 999)
-        
-        // Add one day to end date to make the range inclusive
-        endCal.add(Calendar.DATE, 1)
-        
         Log.d("LeaderboardScreen", "Filtering entries between ${format.format(startCal.time)} and ${format.format(endCal.time)}")
-        
-        // Filter entries that fall within the date range
         entries.filter { entry ->
             val entryCal = Calendar.getInstance().apply { time = entry.timestamp }
-            val isInRange = entryCal.timeInMillis >= startCal.timeInMillis && 
-                           entryCal.timeInMillis < endCal.timeInMillis
-            
+            val isInRange = entryCal.timeInMillis >= startCal.timeInMillis &&
+                entryCal.timeInMillis <= endCal.timeInMillis
             if (isInRange) {
                 Log.d("LeaderboardScreen", "Entry in range: ${entry.user}, date: ${format.format(entry.timestamp)}")
             }
-            
             isInRange
         }
     } catch (e: Exception) {
         Log.e("LeaderboardScreen", "Error filtering by date range: ${e.message}", e)
-        // If parsing fails, return all entries
         entries
     }
 }

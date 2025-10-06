@@ -1,6 +1,6 @@
 package com.example.quitesmoking
 
-import com.example.quitesmoking.Purchase
+import com.example.quitesmoking.model.Purchase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await

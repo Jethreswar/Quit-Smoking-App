@@ -43,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.6.3"
+        kotlinCompilerExtensionVersion = "1.6.11"
     }
 }
 
@@ -55,7 +55,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.foundation:foundation-layout")   // FlowRow / toggleable
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    // Using newer datastore-preferences below; remove older version
     implementation("androidx.media3:media3-exoplayer:1.3.1")
     implementation("androidx.media3:media3-ui:1.3.1")
     /* ---- Navigation & Retrofit ---- */
@@ -86,8 +86,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.foundation.android)
-    implementation(libs.androidx.foundation.android)
     implementation(libs.androidx.foundation.android)
 
     // for notifications scheduling
